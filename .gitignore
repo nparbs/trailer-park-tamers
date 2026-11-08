@@ -5,3 +5,4 @@ shots
 .DS_Store
 dist-server
 data
+.env
