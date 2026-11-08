@@ -1,7 +1,7 @@
 {
   "name": "trailer-park-tamers",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A GBA-style monster-catcher parody with a shared online world.",
   "type": "module",
   "scripts": {
