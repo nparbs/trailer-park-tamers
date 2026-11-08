@@ -52,7 +52,8 @@ export function isMuted() {
 }
 
 function tone(freq: number, start: number, dur: number, type: OscillatorType, vol: number, bus: GainNode, slideTo?: number) {
-  const c = ctx!;
+  // Use the bus's own context so the same synth can render offline for the promo video.
+  const c = bus.context;
   const o = c.createOscillator();
   const g = c.createGain();
   o.type = type;
@@ -68,8 +69,8 @@ function tone(freq: number, start: number, dur: number, type: OscillatorType, vo
 
 let noiseBuf: AudioBuffer | null = null;
 function noise(start: number, dur: number, vol: number, bus: GainNode, hp = 800) {
-  const c = ctx!;
-  if (!noiseBuf) {
+  const c = bus.context;
+  if (!noiseBuf || noiseBuf.sampleRate !== c.sampleRate) {
     noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -174,6 +175,17 @@ const TRACKS: Record<string, Track> = {
     voices: [
       { wave: 'square', vol: 0.08, notes: 'D5 . D5 C5 D5 . F5 . E5 . C5 . A4 . . . D5 . D5 C5 D5 . A5 . G5 . F5 . E5 . . . F5 . E5 . D5 . C5 . A#4 . A4 . G4 . A4 . A#4 . C5 . D5 . E5 . F5 . E5 . C#5 . . .' },
       { wave: 'triangle', vol: 0.24, notes: 'D2 D3 D2 D3 D2 D3 D2 D3 C2 C3 C2 C3 C2 C3 C2 C3 A#1 A#2 A#1 A#2 A#1 A#2 A#1 A#2 A1 A2 A1 A2 A1 A2 A1 A2 G1 G2 G1 G2 G1 G2 G1 G2 A#1 A#2 A#1 A#2 C2 C3 C2 C3 A1 A2 A1 A2 A1 A2 A1 A2 A1 A2 A1 A2 C#2 C#3 E2 E3' },
+    ],
+  },
+  // 120 BPM in sixteenths (128 steps = 16 s), matching the intro's timeline.
+  intro: {
+    bpm: 240,
+    voices: [
+      { wave: 'triangle', vol: 0.24, notes: 'A1 - - - - - - - - - - - - - - - A1 . A2 . A1 . A2 . E1 . E2 . E1 . E2 . F1 . F2 . F1 . F2 . G1 . G2 . G1 . G2 . A1 A2 A1 A2 A1 A2 A1 A2 F1 F2 F1 F2 G1 G2 G1 G2 E1 - - - E1 - - - E1 - - - E2 - E2 - A1 . . . A1 . . A1 . . A1 . . . E2 E2 A1 . A2 . C2 . D2 . E2 . G2 . A2 . . . F1 . F2 . G1 . G2 . A1 - - - - - - -' },
+      { wave: 'square', vol: 0.06, notes: '. . . . . . . . . . . . . . . . A4 . . C5 . . E5 . D5 . C5 . A4 . . . G4 . . A4 . . C5 . B4 . A4 . G4 - - - A4 . C5 . E5 . A5 . G5 . E5 . D5 . C5 . . . . . E5 . E5 . E5 . . . G5 - - - . . . . E5 . . E5 . . E5 . . A5 - - E5 - - - D5 - - - C5 - - - E5 - - - A5 - - - - - - - - - - - - - - -' },
+      { wave: 'kick', vol: 0.45, notes: '. . . . . . . . . . . . . . . . x . . . x . . . x . . . x . . . x . . . x . . . x . . . x . . . x . x . x . x . x . x . x . x . . . . . x . . . x . . . x . . . x . . . x . . x . . x . . x . . x . . . x . . . x . . . x . . . x . . . x . . . x . . . . . . .' },
+      { wave: 'snare', vol: 0.14, notes: '. . . . . . . . . . . . . . . . . . . . x . . . . . . . x . . . . . . . x . . . . . . . x . . . . . . . . . . . x x x x x x x x . . . . x . . . . . . . . . . . . . . . . . . . . . . . . x . . x . . . x . . . . . . . x . . . . . . . x . . . . . . . . . . .' },
+      { wave: 'hat', vol: 0.04, notes: '. . . . . . . . . . . . . . . . . . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . x . x . x . x . x . x . x . x . x . x . x . x . x . . . . .' },
     ],
   },
   park2: {
@@ -363,4 +375,51 @@ export function resumeMusic() {
   const name = current;
   current = null;
   music(name);
+}
+
+/**
+ * Render a music track offline and return it as a 16-bit stereo WAV (base64).
+ * Used by scripts/promo.mjs to give the promo video the same soundtrack as the game.
+ */
+export async function renderTrackWav(name: string, seconds: number): Promise<string> {
+  const tr = TRACKS[name];
+  if (!tr) throw new Error('No track ' + name);
+  const rate = 44100;
+  const oc = new OfflineAudioContext(2, Math.ceil(seconds * rate), rate);
+  const bus = oc.createGain();
+  bus.gain.value = 0.5;
+  bus.connect(oc.destination);
+  const step = 60 / tr.bpm / 2;
+  const voices = tr.voices.map((v) => ({ ...v, tokens: v.notes.trim().split(/\s+/) }));
+  for (let idx = 0, t = 0.02; t < seconds; idx++, t += step) {
+    for (const v of voices) {
+      const tok = v.tokens[idx % v.tokens.length];
+      if (tok === '.' || tok === '-' || !tok) continue;
+      if (v.wave === 'kick' || v.wave === 'snare' || v.wave === 'hat') {
+        drum(v.wave, t, v.vol, bus as GainNode);
+        continue;
+      }
+      let hold = 1;
+      while (v.tokens[(idx + hold) % v.tokens.length] === '-' && hold < 16) hold++;
+      tone(freqOf(tok), t, Math.min(step * hold * 0.92, seconds - t), v.wave as OscillatorType, v.vol, bus as GainNode);
+    }
+  }
+  const buf = await oc.startRendering();
+  const n = buf.length;
+  const out = new DataView(new ArrayBuffer(44 + n * 4));
+  const w = (o: number, s: string) => [...s].forEach((ch, i) => out.setUint8(o + i, ch.charCodeAt(0)));
+  w(0, 'RIFF'); out.setUint32(4, 36 + n * 4, true); w(8, 'WAVE'); w(12, 'fmt ');
+  out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 2, true);
+  out.setUint32(24, rate, true); out.setUint32(28, rate * 4, true); out.setUint16(32, 4, true); out.setUint16(34, 16, true);
+  w(36, 'data'); out.setUint32(40, n * 4, true);
+  const L = buf.getChannelData(0);
+  const R = buf.getChannelData(1);
+  for (let i = 0; i < n; i++) {
+    out.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true);
+    out.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i])) * 32767, true);
+  }
+  let bin = '';
+  const bytes = new Uint8Array(out.buffer);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
 }

@@ -4,6 +4,7 @@ import { buildTextures } from './gfx/textures';
 import { Input, installInput } from './game/input';
 import { resumeMusic, unlockAudio } from './audio/sound';
 import { Title } from './scenes/Title';
+import { Intro } from './scenes/Intro';
 import { installChat } from './ui/chat';
 import { Overworld } from './scenes/Overworld';
 import { BattleScene } from './scenes/Battle';
@@ -15,7 +16,7 @@ class Boot extends Phaser.Scene {
   async create() {
     await buildFont(this);
     buildTextures(this);
-    this.scene.start('Title');
+    this.scene.start('Intro');
   }
 }
 
@@ -46,14 +47,14 @@ const game = new Phaser.Game({
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   input: { keyboard: false, mouse: false, touch: false, gamepad: false },
-  scene: [Boot, Title, Overworld, BattleScene],
+  scene: [Boot, Intro, Title, Overworld, BattleScene],
 });
 
 game.events.on(Phaser.Core.Events.POST_STEP, () => Input.endFrame());
 
 // Handy for debugging in the console and for the screenshot script.
 if (import.meta.env.DEV) {
-  void Promise.all([import('./game/state'), import('./game/creature'), import('./net/client')]).then(([state, creature, client]) => {
-    (window as any).tpt = { game, state, creature, Input, net: client.net };
+  void Promise.all([import('./game/state'), import('./game/creature'), import('./net/client'), import('./audio/sound')]).then(([state, creature, client, sound]) => {
+    (window as any).tpt = { game, state, creature, Input, net: client.net, sound };
   });
 }
