@@ -16,6 +16,8 @@ mkdirSync(frames, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROME ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const page = await browser.newPage({ viewport: { width: 240 * SCALE, height: 160 * SCALE } });
 await page.goto(process.env.URL ?? 'http://localhost:5173/');
+// Only the game canvas belongs in the video: hide buttons, chat and status overlays.
+await page.addStyleTag({ content: 'body > #app > :not(#game) { display: none !important; }' });
 await page.waitForFunction(() => window.tpt?.game?.scene?.getScene('Intro')?.sys?.isActive());
 await page.evaluate(() => (window.tpt.game.scene.getScene('Intro').manual = true));
 
