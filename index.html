@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1b1b24" />
+    <title>Trailer Park Tamers</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="game"></div>
+      <div id="pad" aria-hidden="true">
+        <div class="dpad">
+          <button data-key="up" class="d up"></button>
+          <button data-key="left" class="d left"></button>
+          <button data-key="right" class="d right"></button>
+          <button data-key="down" class="d down"></button>
+          <span class="d hub"></span>
+        </div>
+        <div class="mid">
+          <button data-key="select" class="pill">SELECT</button>
+          <button data-key="start" class="pill">START</button>
+        </div>
+        <div class="ab">
+          <button data-key="b" class="round b">B</button>
+          <button data-key="a" class="round a">A</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
