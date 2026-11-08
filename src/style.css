@@ -44,6 +44,9 @@ html, body {
   @media (orientation: portrait) {
     #game { flex: 0 0 auto; height: calc(100vw * 2 / 3); margin-top: env(safe-area-inset-top); }
     #pad { flex: 1; }
+    /* Plenty of room under the game: keep chat and status off the screen. */
+    #hud { top: calc(100vw * 2 / 3 + 8px + env(safe-area-inset-top)); }
+    #chatlog { top: calc(100vw * 2 / 3 + 30px + env(safe-area-inset-top)); max-width: calc(100vw - 16px); }
   }
   /* Landscape: game fills the screen, pad floats over the sides. */
   @media (orientation: landscape) {

@@ -9,6 +9,8 @@ export function saveGame(): boolean {
   const local = saveLocal();
   if (net.isOnline) {
     net.send({ t: 'save', state: G });
+    // Keep the copy CONTINUE uses in step with what the server now has.
+    net.serverSave = JSON.parse(JSON.stringify(G));
     return true;
   }
   return local;

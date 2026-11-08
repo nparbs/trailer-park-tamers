@@ -81,6 +81,13 @@ export class World {
         return this.save(c, m.state);
       case 'enter':
         return this.enter(c, m.map, m.x, m.y, m.dir);
+      case 'leave':
+        if (c.map) {
+          this.maps.get(c.map)?.delete(c);
+          this.toMap(c.map, { t: 'leave', id: c.id });
+          c.map = '';
+        }
+        return;
       case 'move':
         if (!c.map) return;
         c.x = int(m.x);

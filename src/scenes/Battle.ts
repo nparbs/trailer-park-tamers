@@ -30,7 +30,7 @@ export interface BattleData {
 }
 
 const EX = 176; // enemy sprite centre x
-const EY = 72; // enemy sprite feet y
+const EY = 70; // enemy sprite feet y
 const PX = 62;
 const PY = 128;
 
@@ -118,7 +118,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private boxPos(side: Side) {
-    return side === 'enemy' ? { x: 6, y: 8 } : { x: 124, y: 70 };
+    return side === 'enemy' ? { x: 6, y: 8 } : { x: 124, y: 66 };
   }
 
   private setBoxVisible(side: Side, v: boolean) {
@@ -127,7 +127,7 @@ export class BattleScene extends Phaser.Scene {
 
   private refreshBox(side: Side, d: Drifter, hp = d.hp) {
     const box = this.boxes[side];
-    box.name.setText(displayName(d).toUpperCase().slice(0, side === 'enemy' && d.status ? 8 : 12));
+    box.name.setText(shortName(displayName(d).toUpperCase(), side === 'enemy' && d.status ? 8 : 12));
     box.lv.setText('Lv' + d.level);
     box.max = maxHp(d);
     box.shownHp = hp;
@@ -160,7 +160,7 @@ export class BattleScene extends Phaser.Scene {
   private setStatus(side: Side, s: Status | null) {
     const box = this.boxes[side];
     box.status.setText(s ? STATUS_NAME[s] : '');
-    if (side === 'enemy') box.name.setText(displayName(this.b.foe).toUpperCase().slice(0, s ? 8 : 12));
+    if (side === 'enemy') box.name.setText(shortName(displayName(this.b.foe).toUpperCase(), s ? 8 : 12));
   }
 
   private tweenHp(side: Side, to: number, max: number) {
@@ -191,7 +191,7 @@ export class BattleScene extends Phaser.Scene {
     return new Promise<void>((resolve) => this.tweens.add({ ...cfg, onComplete: () => resolve() }));
   }
 
-  private say(text: string, auto = 1100) {
+  private say(text: string, auto = 1800) {
     return this.ui.say(text, auto);
   }
 
@@ -329,9 +329,9 @@ export class BattleScene extends Phaser.Scene {
   private async chooseAction(): Promise<Action> {
     const b = this.b;
     for (;;) {
-      this.ui.show(`What now,
-${displayName(b.me).toUpperCase()}?`, 16);
-      const c = await this.ui.choose(['FIGHT', 'BAG', 'CREW', 'RUN'], { x: 134, y: 112, w: 106, cols: 2, colW: 44, initial: this.lastAction });
+      this.ui.show(`What now?
+${shortName(displayName(b.me).toUpperCase(), 13)}`, 13);
+      const c = await this.ui.choose(['FIGHT', 'BAG', 'CREW', 'RUN'], { x: 118, y: 112, w: 122, cols: 2, colW: 54, initial: this.lastAction });
       this.lastAction = Math.max(0, c);
       if (c === 0) {
         const m = await this.chooseMove();
@@ -363,14 +363,14 @@ ${displayName(b.me).toUpperCase()}?`, 16);
       return 0;
     }
     this.ui.show('');
-    const info = panel(this, 150, 98, 90, 62);
-    const pp = label(this, 160, 108, '');
-    const ty = label(this, 160, 128, '');
-    const tyName = label(this, 160, 140, '');
+    const info = panel(this, 150, 102, 90, 58).setDepth(1010);
+    const pp = label(this, 160, 112, '').setDepth(1012);
+    const ty = label(this, 160, 130, '').setDepth(1012);
+    const tyName = label(this, 160, 141, '').setDepth(1012);
     const names = me.moves.map((m) => move(m.id).name.toUpperCase());
     for (;;) {
       const i = await this.ui.choose(names, {
-        x: 0, y: 98, w: 150, rowH: 12, cancel: true, initial: Math.min(this.lastMove, names.length - 1),
+        x: 0, y: 102, w: 150, rowH: 11, cancel: true, initial: Math.min(this.lastMove, names.length - 1),
         onMove: (k) => {
           const m = me.moves[k];
           const def = move(m.id);
@@ -396,6 +396,10 @@ ${displayName(b.me).toUpperCase()}?`, 16);
     const id = await pickItem(this, this.ui);
     if (!id) return null;
     const def = item(id);
+    if (def.kind === 'key' || def.kind === 'seed') {
+      await this.say("That won't help in a fight.");
+      return null;
+    }
     if (def.kind === 'catch') {
       if (this.b.player.length >= 6 && G.storage.length >= 60) {
         await this.say('Your storage unit is packed to the ceiling!');
@@ -458,11 +462,13 @@ ${displayName(b.me).toUpperCase()}?`, 16);
           await this.animHit(e.side, e.eff);
           break;
         case 'hp':
-          this.b.mon(e.side).hp = e.hp;
+          // Online fights only: offline, the rules engine already set this, and by now
+          // the active fighter may be the next one sent out.
+          if (this.data_.net) this.b.mon(e.side).hp = e.hp;
           await this.tweenHp(e.side, e.hp, e.max);
           break;
         case 'status':
-          this.b.mon(e.side).status = e.status;
+          if (this.data_.net) this.b.mon(e.side).status = e.status;
           this.setStatus(e.side, e.status);
           break;
         case 'stat': {
@@ -485,7 +491,7 @@ ${displayName(b.me).toUpperCase()}?`, 16);
           await this.animThrow(e.shakes, e.caught);
           break;
         case 'send': {
-          this.b.active[e.side] = e.index;
+          if (this.data_.net) this.b.active[e.side] = e.index;
           const d = e.side === 'enemy' ? this.b.enemy[e.index] : this.b.player[e.index];
           if (e.side === 'enemy') markSeen(d.sp);
           await this.sendOut(e.side, d);
@@ -602,7 +608,7 @@ ${displayName(b.me).toUpperCase()}?`, 16);
       }
       const names = d.moves.map((x) => move(x.id).name.toUpperCase());
       this.ui.show('Which move should be forgotten?');
-      const k = await this.ui.choose(names, { x: 0, y: 98, w: 150, rowH: 12, cancel: true });
+      const k = await this.ui.choose(names, { cancel: true });
       if (k < 0) continue;
       const old = names[k];
       replaceMove(d, k, m);
@@ -697,4 +703,11 @@ ${displayName(b.me).toUpperCase()}?`, 16);
       img.destroy();
     }
   }
+}
+
+/** Fit a name in n characters: the last word if the whole thing is too long. */
+function shortName(name: string, n: number) {
+  if (name.length <= n) return name;
+  const last = name.split(' ').pop() ?? name;
+  return last.length <= n ? last : name.slice(0, n);
 }

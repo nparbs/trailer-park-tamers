@@ -218,6 +218,31 @@ export const SCRIPTS: Record<string, Script> = {
     await ui.say('CLERK: Come again. Or don\'t. I get paid the same.');
   },
 
+  async dealer(ow) {
+    const ui = ow.ui;
+    await ui.say("DEZ: Psst. Yo. You need somethin'? I got whatever helps your people feel better.");
+    const c = await ui.ask('Buy something?', ['BUY', 'NAH']);
+    if (c !== 0) return void (await ui.say("DEZ: Aight. I'll be here. I'm always here."));
+    ui.close();
+    const stock = G.flags.badge1 ? (['FORTY', 'LOKO', 'JOINT', 'SEED', 'PILLS'] as const) : (['FORTY', 'LOKO', 'JOINT', 'SEED'] as const);
+    await shop(ow, ui, [...stock], "DEZ'S CORNER");
+    await ui.say("DEZ: You ain't get that from me.");
+  },
+
+  async skateshop(ow) {
+    const ui = ow.ui;
+    await ui.say('CLERK: Welcome to Pawn & Skate. We buy gold, sell boards, and forget faces.');
+    const c = await ui.ask('Buy something?', ['BUY', 'NAH']);
+    if (c !== 0) return;
+    ui.close();
+    await shop(ow, ui, ['SKATEBOARD', 'TAPE', 'SALTS', 'ENERGY'], 'PAWN & SKATE');
+    if (G.bag.SKATEBOARD) await ui.say('CLERK: Use the board from your BAG, or hit SELECT. Do NOT skate in my store.');
+  },
+
+  pot0: (ow) => pot(ow, 'pot0'),
+  pot1: (ow) => pot(ow, 'pot1'),
+  pot2: (ow) => pot(ow, 'pot2'),
+
   async storage(ow) {
     await storage(ow, ow.ui);
   },
@@ -260,4 +285,38 @@ async function healAnim(ow: Overworld) {
   await ow.ui.wait(900);
   healParty();
   music(ow.map.music);
+}
+
+/** Grow pots: plant a seed, wait a few minutes of play, harvest joints. */
+const GROW_MS = 5 * 60 * 1000;
+
+async function pot(ow: Overworld, id: string) {
+  const ui = ow.ui;
+  const planted = G.grow?.[id];
+  if (planted === undefined) {
+    if (!G.bag.SEED) {
+      await ui.say("An empty pot full of good dirt. You'd need a BAG SEED to grow anything.");
+      return;
+    }
+    const yes = await ui.ask('An empty pot. Plant a BAG SEED?');
+    if (yes !== 0) return;
+    G.bag.SEED!--;
+    G.grow = { ...(G.grow ?? {}), [id]: G.playMs };
+    sfx('select');
+    await ui.say("You pushed the seed into the dirt. Give it a few minutes under the lamp.");
+    return;
+  }
+  const left = GROW_MS - (G.playMs - planted);
+  if (left > 0) {
+    const mins = Math.ceil(left / 60000);
+    await ui.say(left > GROW_MS / 2 ? `A tiny sprout. About ${mins} more minute${mins === 1 ? '' : 's'}.` : `It's getting big and very smelly. About ${mins} more minute${mins === 1 ? '' : 's'}.`);
+    return;
+  }
+  const n = 2 + Math.floor(Math.random() * 3);
+  addItem('JOINT', n);
+  const seedBack = Math.random() < 0.5;
+  if (seedBack) addItem('SEED', 1);
+  delete G.grow[id];
+  sfx('levelup');
+  await ui.say(`You harvested the plant and rolled ${n} JOINTS!${seedBack ? ' You also saved a BAG SEED.' : ''}`);
 }

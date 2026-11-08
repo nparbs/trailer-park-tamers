@@ -271,6 +271,70 @@ export function drawDrifter(l: Look, back: boolean): Pix {
         p.rect(handR.x - 3, handR.y - 9, 6, 3, 0x40a0d0);
         p.rect(handR.x - 1, handR.y - 14, 2, 2, 0x303030);
         break;
+      case 'gun': {
+        // A cartoon pistol held sideways.
+        const gx = handR.x - 2;
+        const gy = handR.y - 6;
+        p.rect(gx, gy, 12, 4, 0x2c2c34);
+        p.rect(gx, gy + 3, 4, 6, 0x2c2c34);
+        p.rect(gx + 10, gy - 1, 2, 2, 0x2c2c34);
+        p.rect(gx + 1, gy + 1, 8, 1, 0x5c5c68);
+        break;
+      }
+      case 'joint':
+        p.rect(handR.x - 1, handR.y - 8, 2, 7, 0xf0f0e8);
+        p.rect(handR.x - 1, handR.y - 9, 2, 1, 0xe86830);
+        p.speckle(handR.x - 4, handR.y - 22, 8, 12, 0xc8c8d0, 0.3, 7);
+        break;
+      case 'forty':
+        p.rect(handR.x - 3, handR.y - 16, 6, 17, 0xb08850);
+        p.rect(handR.x - 1, handR.y - 21, 3, 6, 0x6c4818);
+        p.rect(handR.x - 3, handR.y - 10, 6, 4, 0xe8d8a0);
+        p.rect(handL.x - 3, handL.y - 16, 6, 17, 0xb08850);
+        p.rect(handL.x - 1, handL.y - 21, 3, 6, 0x6c4818);
+        break;
+      case 'handle':
+        p.rect(handR.x - 5, handR.y - 18, 10, 19, 0xd8e0e8);
+        p.rect(handR.x - 4, handR.y - 12, 8, 6, 0x3050a0);
+        p.rect(handR.x - 1, handR.y - 22, 3, 5, 0xc03030);
+        p.rect(handR.x + 4, handR.y - 16, 2, 8, 0xb8c0c8);
+        break;
+      case 'pills':
+        p.rect(handR.x - 3, handR.y - 10, 7, 10, 0xe89030);
+        p.rect(handR.x - 3, handR.y - 12, 7, 3, 0xf0f0f0);
+        p.rect(handR.x - 2, handR.y - 7, 5, 3, 0xf8f8f0);
+        for (const [dx, dy] of [[-8, -4], [-6, -1], [6, -3]]) p.rect(handR.x + dx, handR.y + dy, 2, 2, 0xf0f0f0);
+        break;
+      case 'beaker':
+        p.trap(handR.y - 12, 12, handR.x - 2, handR.x + 1, handR.x - 5, handR.x + 4, 0xc8e8f0);
+        p.trap(handR.y - 6, 6, handR.x - 3, handR.x + 2, handR.x - 5, handR.x + 4, 0x40a0e8);
+        p.speckle(handR.x - 3, handR.y - 20, 6, 8, 0xc8f0c8, 0.3, 3);
+        break;
+      case 'leaf':
+        for (const [dx, dy] of [[0, -10], [-5, -7], [5, -7], [-7, -2], [7, -2]]) p.line(handR.x, handR.y, handR.x + dx, handR.y + dy, 0x3c9c3c, 2);
+        p.rect(handR.x, handR.y, 1, 5, 0x2c7c2c);
+        break;
+      case 'phone':
+        p.rect(handR.x - 3, handR.y - 11, 6, 11, 0x202028);
+        p.rect(handR.x - 2, handR.y - 10, 4, 8, 0x60a8f0);
+        p.rect(handR.x - 1, handR.y - 9, 1, 2, 0xd8f0ff);
+        break;
+      case 'saw':
+        p.rect(handR.x - 4, handR.y - 6, 9, 6, 0xd8a020);
+        p.rect(handR.x + 5, handR.y - 4, 10, 2, 0xc8c8d0);
+        for (let x = handR.x + 6; x < handR.x + 15; x += 2) p.set(x, handR.y - 2, 0x8c8c94);
+        break;
+      case 'loko':
+        p.rect(handR.x - 3, handR.y - 14, 6, 14, 0x40c0a0);
+        p.rect(handR.x - 3, handR.y - 10, 6, 3, 0xe040a0);
+        p.rect(handR.x - 3, handR.y - 15, 6, 1, 0xc8c8d0);
+        break;
+      case 'crackpipe':
+        p.rect(handR.x - 1, handR.y - 9, 2, 9, 0xd8e0e8);
+        p.oval(handR.x - 2, handR.y - 12, 5, 4, 0xd8e0e8);
+        p.rect(handR.x + 2, handR.y - 7, 4, 3, 0xe0c040);
+        p.set(handR.x + 4, handR.y - 9, 0xf08030);
+        break;
       case 'bindle':
         break;
     }

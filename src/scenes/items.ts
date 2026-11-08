@@ -12,6 +12,14 @@ export async function useItemOutside(ow: Overworld, id: ItemId) {
     await ow.ui.say("You can't just bag somebody in broad daylight. Wear them down in a fight first.");
     return;
   }
+  if (def.kind === 'key') {
+    ow.toggleSkate();
+    return;
+  }
+  if (def.kind === 'seed') {
+    await ow.ui.say('Plant it in an empty pot at the grow house in Grimsby.');
+    return;
+  }
   const i = await pickFromParty(ow, ow.ui, { title: `Use ${def.name.toUpperCase()} on who?` });
   if (i < 0) return;
   const d = G.party[i];
@@ -22,12 +30,13 @@ export async function useItemOutside(ow: Overworld, id: ItemId) {
     d.status = null;
   } else if (def.kind === 'heal') {
     if (d.hp <= 0) return void (await ow.ui.say("They're knocked out. You'll need JUMPER CABLES."));
-    if (d.hp >= m) return void (await ow.ui.say("They're already fine."));
+    if (d.hp >= m && !(def.cures && d.status)) return void (await ow.ui.say("They're already fine."));
     const before = d.hp;
     d.hp = Math.min(m, d.hp + (def.heal ?? 0));
+    if (def.cures) d.status = null;
     G.bag[id]!--;
     sfx('heal');
-    await ow.ui.say(`${displayName(d)} got ${d.hp - before} HP back.`);
+    await ow.ui.say(d.hp > before ? `${displayName(d)} got ${d.hp - before} HP back.` : `${displayName(d)} is feeling better!`);
     return;
   } else if (def.kind === 'cure') {
     if (!d.status) return void (await ow.ui.say('Nothing wrong with them. Well, nothing that salts can fix.'));

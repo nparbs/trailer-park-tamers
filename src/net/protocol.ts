@@ -34,6 +34,7 @@ export type ClientMsg =
   | { t: 'hello'; v: number; token?: string; name?: string; outfit?: number }
   | { t: 'save'; state: unknown }
   | { t: 'enter'; map: string; x: number; y: number; dir: Dir }
+  | { t: 'leave' }
   | { t: 'move'; x: number; y: number; dir: Dir }
   | { t: 'busy'; busy: boolean }
   | { t: 'chat'; text: string }

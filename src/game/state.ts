@@ -24,6 +24,8 @@ export interface GameState {
   seen: string[];
   caught: string[];
   playMs: number;
+  /** Grow house pots: play time (ms) when a seed went in. */
+  grow: Record<string, number>;
 }
 
 const KEY = 'tpt-save-v1';
@@ -48,6 +50,7 @@ export function newGame(): GameState {
     seen: [],
     caught: [],
     playMs: 0,
+    grow: {},
   };
 }
 

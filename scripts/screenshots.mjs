@@ -32,7 +32,7 @@ async function jump(map, x, y, opts = {}) {
     s.map = map; s.x = x; s.y = y; s.name = 'KID';
     s.flags = { starter: true, dale_met: true, rival1: true, dex: true, starter_WILLIE: true, ...(opts.flags || {}) };
     s.party = (opts.party || [['WILLIE', 8]]).map(([sp, lv]) => creature.makeDrifter(sp, lv));
-    s.bag = { SACK: 5, BURRITO: 3, TAPE: 2, SALTS: 1 };
+    s.bag = { SACK: 5, BURRITO: 3, TAPE: 2, SALTS: 1, FORTY: 2, LOKO: 1, JOINT: 4, SEED: 2, SKATEBOARD: 1, PILLS: 1 };
     s.seen = ['WILLIE', 'JOE', 'GARY']; s.caught = ['WILLIE'];
     state.setState(s);
     for (const sc of game.scene.getScenes(true)) if (sc.scene.key !== 'Boot') game.scene.stop(sc.scene.key);
@@ -53,7 +53,7 @@ if (want('intro')) {
 }
 
 if (want('maps')) {
-  for (const [m, x, y] of [['home', 1, 2], ['park', 9, 7], ['dale', 4, 5], ['route1', 9, 20], ['route1', 9, 5], ['town', 14, 9], ['town', 6, 16], ['soup', 4, 4], ['gas', 4, 4], ['trap', 5, 10]]) {
+  for (const [m, x, y] of [['park', 17, 14], ['route1', 9, 5], ['route1', 9, 22], ['town', 15, 7], ['town', 7, 17], ['town', 24, 15], ['skate', 4, 4], ['grow', 4, 4], ['lab', 3, 4]]) {
     await jump(m, x, y);
     await wait(2800);
     await shot(`map-${m}-${x}-${y}`);
@@ -76,7 +76,7 @@ if (want('battle')) {
 }
 
 if (want('screens')) {
-  await jump('town', 14, 9, { party: [['WILLIE', 8], ['AMOS', 6], ['STAN', 5], ['CAROL', 7]] });
+  await jump('town', 14, 9, { party: [['SWITCHGLEN', 28], ['ROCKBOTTOM', 22], ['BLUEBATCH', 26], ['CAROL', 7]] });
   await key('Enter'); await wait(400); await shot('s1-start');
   await tap('ArrowDown'); await tap('KeyZ'); await wait(400); await shot('s2-crew');
   await tap('KeyZ'); await wait(300); await tap('KeyZ'); await wait(400); await shot('s3-summary');
@@ -105,7 +105,7 @@ if (want('sprites')) {
     }, fn);
     await wait(300);
   };
-  await canvasOf(`const ids = Object.keys(game.textures.list).filter((k) => k.startsWith('pf_'));
+  await canvasOf(`const ids = Object.keys(game.textures.list).filter((k) => k.startsWith('pf_')).slice(24);
     ids.forEach((k, i) => s.add.image((i % 6) * 40 + 20, Math.floor(i / 6) * 40 + 20, k).setScale(0.6));`);
   await shot('sprites-front');
   await canvasOf(`const ids = Object.keys(game.textures.list).filter((k) => k.startsWith('pb_') || k.startsWith('tf_') || k.startsWith('tb_'));

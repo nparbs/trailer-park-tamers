@@ -30,10 +30,11 @@ Hosting on the Debian VM is in [docs/hosting.md](docs/hosting.md).
 
 The on-screen pad only appears on touch screens. In portrait it sits under the game like a handheld; in landscape it floats over the sides.
 
-## What's in v0.1
+## What's in it
 
 - Pine Acres Trailer Park, Rail Yard Road and the town of Grimsby, with seven interiors
-- 24 drifters across 9 types (Street, Booze, Chem, Psycho, Tough, Slick, Holy, Feral, Scrap), with evolutions
+- 46 drifters across 10 types (Street, Booze, Chem, Psycho, Tough, Slick, Holy, Feral, Scrap, Strapped), with two- and three-stage evolutions
+- Homeless encampments and dumpster lots, a dealer, a grow house where you grow joints, a meth lab trailer, and a skateboard
 - About 50 moves, status effects (Passed Out, Sick, Wasted), stat stages, crits, STAB and type matchups
 - Catching with three tiers of catch item, a party of six, and a storage unit
 - Trainers who spot you and walk over, a rival fight, and Big Tony's trap house as the first boss

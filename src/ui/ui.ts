@@ -50,6 +50,8 @@ class DialogBox implements Widget {
   private blink = 0;
   private autoMs = 0;
   private waited = 0;
+  /** Time the current page finished typing; taps right after that are ignored. */
+  private fullFor = 0;
   visible = true;
 
   constructor(private scene: Phaser.Scene, x = 0, y = H - 48, private w = W, h = 48) {
@@ -126,12 +128,13 @@ class DialogBox implements Widget {
     const dt = this.scene.game.loop.delta;
     const full = this.shown >= this.pageLen;
     if (!full) {
+      this.fullFor = 0;
       const speed = Input.held('a') || Input.held('b') ? 4 : 1.5;
       const before = Math.floor(this.shown);
       this.shown = Math.min(this.pageLen, this.shown + speed * (dt / 16.7));
       if (Math.floor(this.shown) > before && Math.floor(this.shown) % 3 === 0) sfx('blip');
       this.render();
-      if ((Input.pressed('a') || Input.pressed('b')) && this.shown > 2) {
+      if ((Input.pressed('a') || Input.pressed('b')) && this.shown > 6) {
         this.shown = this.pageLen;
         this.render();
       }
@@ -139,13 +142,16 @@ class DialogBox implements Widget {
     }
     const last = this.page >= this.pages.length - 1;
     this.blink += dt;
+    this.fullFor += dt;
+    // A stray or double tap shouldn't skip a line before it can be read.
+    const canAdvance = this.fullFor > 280;
     this.arrow.setVisible(!last && this.blink % 600 < 400);
     if (this.autoMs && last) {
       this.waited += dt;
-      if (this.waited >= this.autoMs || Input.pressed('a') || Input.pressed('b')) this.done();
+      if (this.waited >= this.autoMs || (canAdvance && (Input.pressed('a') || Input.pressed('b')))) this.done();
       return;
     }
-    if (Input.pressed('a') || Input.pressed('b')) {
+    if (canAdvance && (Input.pressed('a') || Input.pressed('b'))) {
       sfx('select');
       if (last) this.done();
       else {
@@ -204,7 +210,7 @@ class Menu implements Widget {
     this.rows = Math.ceil(options.length / cols);
     const maxLen = Math.max(...options.map((s) => s.length));
     this.rowH = o.rowH ?? 16;
-    this.colW = o.colW ?? maxLen * 8 + 14;
+    this.colW = Math.max(o.colW ?? 0, maxLen * 8 + 14);
     const w = o.w ?? cols * this.colW + 18;
     const h = this.rows * this.rowH + 14;
     const x = o.x ?? W - w;
@@ -219,6 +225,8 @@ class Menu implements Widget {
     });
     this.cur = cursor(scene);
     this.objs.push(this.cur);
+    // Draw over any text box underneath, so its words never show through.
+    for (const ob of this.objs) (ob as any).setDepth((ob as any).depth + 10);
     this.i = Math.min(o.initial ?? 0, options.length - 1);
     this.place();
   }

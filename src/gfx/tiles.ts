@@ -126,24 +126,68 @@ export const OUTDOOR: TileDef[] = [
   { ch: '.', draw: (p) => grass(p) },
   { ch: ',', draw: (p) => grass(p, true) },
   {
+    // Encampment ground: flattened cardboard, tarp scraps and empties. Drifters live here.
     ch: '"', enc: true, draw: (p) => {
-      p.rect(0, 0, 16, 16, C.weed);
-      for (let i = 0; i < 4; i++)
-        for (let j = 0; j < 2; j++) {
-          const x = i * 4 + (j ? 2 : 0);
-          const y = j * 8;
-          p.line(x, y + 7, x + 1, y + 1, C.weedD);
-          p.line(x + 2, y + 7, x + 2, y + 2, C.weedL);
-          p.set(x + 1, y + 1, C.weedL);
-        }
-      p.set(5, 4, 0xd8d8d0); // a stray cigarette butt
-      p.set(6, 4, 0xe09050);
+      dirt(p);
+      p.speckle(0, 0, 16, 16, 0x9c7c50, 0.06, 21);
+      p.rect(2, 3, 8, 6, 0xc09868);
+      p.rect(2, 3, 8, 1, 0xa07848);
+      p.rect(3, 5, 3, 1, 0xa07848);
+      p.rect(11, 11, 2, 3, 0x5c8c3c);
+      p.rect(11, 10, 2, 1, 0xd8d0b0);
+      p.set(6, 13, 0xd04040);
+      p.set(13, 4, 0xe8d050);
     },
   },
+  {
+    // Trash heap ground behind the dumpsters. Also full of drifters.
+    ch: 'n', enc: true, draw: (p) => {
+      asphalt(p);
+      p.oval(0, 6, 8, 8, 0x2c2c34);
+      p.oval(8, 1, 8, 8, 0x34343c);
+      p.set(2, 8, 0x5c5c68);
+      p.set(11, 3, 0x5c5c68);
+      p.rect(9, 11, 4, 3, 0xd8c8a0);
+      p.rect(3, 2, 3, 2, 0xd04040);
+      p.rect(12, 12, 2, 2, 0x40a0d0);
+      p.set(7, 14, 0xe8e0c0);
+    },
+  },
+  {
+    ch: 'u', solid: true, draw: (p) => {
+      dirt(p);
+      p.trap(2, 12, 7, 8, 0, 15, 0x3c70c0);
+      p.trap(2, 12, 7, 8, 5, 10, 0x2c5090);
+      p.rect(6, 9, 4, 5, 0x1c2c48);
+      p.line(8, 1, 8, 2, 0x8c6c4c);
+    },
+  },
+  {
+    ch: 'v', solid: true, draw: (p) => {
+      dirt(p);
+      p.oval(0, 3, 16, 14, 0xe08030);
+      p.rect(0, 10, 16, 6, 0xb88050);
+      p.oval(1, 3, 14, 13, 0xe08030);
+      p.oval(5, 8, 6, 7, 0x6c3c18);
+      p.line(2, 9, 8, 3, 0xf0a050);
+    },
+  },
+  {
+    ch: 'a', solid: true, draw: (p) => {
+      dirt(p);
+      p.rect(1, 4, 14, 11, 0xc8a070);
+      p.rect(1, 4, 14, 2, 0xa88050);
+      p.rect(0, 2, 16, 3, 0x4c8c4c);
+      p.rect(5, 8, 6, 7, 0x3c2c1c);
+      p.rect(2, 7, 2, 2, 0x987040);
+    },
+  },
+  { ch: 'C', draw: (p) => { asphalt(p); for (let y = 1; y < 16; y += 4) p.rect(1, y, 14, 2, 0xe8e8e8); } },
+  { ch: 'I', draw: (p) => { asphalt(p); for (let x = 1; x < 16; x += 4) p.rect(x, 1, 2, 14, 0xe8e8e8); } },
   { ch: ':', draw: dirt },
   { ch: '=', draw: asphalt },
-  { ch: '-', draw: (p) => { asphalt(p); p.rect(2, 7, 8, 2, C.line); } },
-  { ch: '|', draw: (p) => { asphalt(p); p.rect(7, 2, 2, 8, C.line); } },
+  { ch: '-', draw: (p) => { asphalt(p); p.rect(3, 15, 10, 1, C.line); } },
+  { ch: '|', draw: (p) => { asphalt(p); p.rect(15, 3, 1, 10, C.line); } },
   { ch: '_', draw: sidewalk },
   {
     ch: 'T', solid: true, draw: (p) => {
@@ -356,6 +400,17 @@ export const OUTDOOR: TileDef[] = [
       p.rect(11, 6, 1, 5, 0x282828);
     },
   },
+  { ch: 'M', solid: true, draw: (p) => { flatRoof(p, 0x7c4cb0); p.rect(0, 0, 16, 2, 0x9c6cd0); } },
+  {
+    ch: 'G', solid: true, draw: (p) => {
+      brick(p);
+      p.rect(1, 2, 14, 11, 0x202028);
+      p.rect(2, 6, 12, 3, 0xe8c040);
+      p.rect(3, 9, 2, 2, 0xe8e8e8);
+      p.rect(11, 9, 2, 2, 0xe8e8e8);
+      p.rect(3, 4, 10, 1, 0xf060a0);
+    },
+  },
   // Trap house.
   { ch: 'Z', solid: true, draw: (p) => shingles(p, 0x4c4048) },
   { ch: 'H', solid: true, draw: (p) => woodWall(p, 0x8c8478) },
@@ -524,6 +579,30 @@ export const INDOOR: TileDef[] = [
   { ch: 'x', solid: true, draw: (p) => { woodFloor(p); p.rect(1, 6, 10, 8, 0xd8b880); p.rect(1, 6, 10, 1, 0xb89860); p.rect(5, 3, 10, 7, 0xe0c890); p.rect(6, 4, 3, 2, 0xc04040); p.rect(3, 12, 4, 3, 0x40a0d0); } },
   { ch: 'p', solid: true, draw: (p) => { lino(p); p.rect(5, 10, 6, 6, 0xb06040); p.oval(2, 1, 12, 10, 0x3c8030); p.oval(4, 2, 6, 5, 0x5ca048); } },
   { ch: 'C', solid: true, draw: (p) => { lino(p); p.rect(4, 2, 8, 6, 0x9c6c3c); p.rect(4, 8, 8, 3, 0xb88850); p.rect(4, 11, 1, 5, 0x6c4c2c); p.rect(11, 11, 1, 5, 0x6c4c2c); } },
+  {
+    ch: 'G', solid: true, draw: (p) => {
+      woodFloor(p);
+      p.rect(0, 0, 16, 2, 0xf8e8a0);
+      p.rect(4, 11, 8, 5, 0x6c4c2c);
+      for (const [dx, dy] of [[0, -9], [-5, -6], [5, -6], [-6, -1], [6, -1], [-3, -4], [3, -4]]) p.line(8, 11, 8 + dx, 11 + dy, 0x3c9c3c, 2);
+      p.rect(7, 3, 2, 8, 0x2c7c2c);
+    },
+  },
+  { ch: 'g', solid: true, draw: (p) => { woodFloor(p); p.rect(3, 8, 10, 8, 0x6c4c2c); p.rect(3, 8, 10, 2, 0x4c3018); p.rect(4, 9, 8, 1, 0x3c2810); } },
+  {
+    ch: 'H', solid: true, draw: (p) => {
+      lino(p);
+      p.rect(0, 5, 16, 11, 0x8c8c94);
+      p.rect(0, 5, 16, 3, 0xb8b8c0);
+      p.trap(0, 6, 3, 4, 1, 6, 0xc8e8f0);
+      p.rect(1, 3, 6, 3, 0x40a0e8);
+      p.rect(9, 1, 3, 5, 0xc8e8f0);
+      p.rect(9, 3, 3, 3, 0x60d060);
+      p.rect(13, 2, 2, 4, 0xe8d040);
+    },
+  },
+  { ch: 'U', solid: true, draw: (p) => { wallpaper(p); for (let i = 0; i < 3; i++) { p.rect(1 + i * 5, 1, 4, 11, [0xd04040, 0x40a0d0, 0xe8c040][i]); p.rect(1 + i * 5, 3, 4, 1, 0x202020); p.rect(1 + i * 5, 9, 4, 1, 0x202020); } } },
+  { ch: 'I', solid: true, draw: (p) => { lino(p); p.rect(3, 2, 10, 14, 0xd8d8e0); p.rect(3, 2, 10, 2, 0xb8b8c0); p.rect(5, 0, 6, 2, 0x8c8c94); p.rect(4, 7, 8, 3, 0xd04040); } },
   { ch: 'L', solid: true, draw: (p) => { lino(p); p.rect(1, 6, 14, 10, 0x9c6c3c); p.rect(3, 0, 10, 8, 0xd0d0c8); p.rect(4, 1, 8, 5, 0x3c5c8c); p.rect(5, 2, 3, 1, 0x80c0f0); p.rect(4, 7, 8, 1, 0xa0a098); } },
 ];
 

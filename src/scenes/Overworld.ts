@@ -21,6 +21,7 @@ import { useItemOutside } from './items';
 const TS = 16;
 const WALK_MS = 210;
 const RUN_MS = 115;
+const SKATE_MS = 85;
 const DV: Record<Dir, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const FRAME0: Record<Dir, number> = { down: 0, up: 3, left: 6, right: 6 };
 
@@ -50,6 +51,9 @@ export class Overworld extends Phaser.Scene {
   private pendingWarp = false;
   private nameTag: Phaser.GameObjects.GameObject[] = [];
   online!: OnlineLayer;
+  private quitToTitle = false;
+  skating = false;
+  private board?: Phaser.GameObjects.Graphics;
 
   constructor() {
     super('Overworld');
@@ -113,6 +117,9 @@ export class Overworld extends Phaser.Scene {
     music(this.map.music);
     if (!this.map.indoor) this.showMapName();
     this.online?.onMapLoaded();
+    if (this.map.indoor) this.skating = false;
+    this.board = undefined;
+    this.drawBoard();
   }
 
   private showMapName() {
@@ -143,7 +150,9 @@ export class Overworld extends Phaser.Scene {
 
   private updateWeeds(w: Walker) {
     const t = this.tile(w.x, w.y);
-    w.weeds.setPosition(w.x * TS, w.y * TS).setVisible(!!t?.enc && !w.moving);
+    // Encounter ground is camp litter now, nothing to hide your legs in.
+    w.weeds.setPosition(w.x * TS, w.y * TS).setVisible(false);
+    void t;
   }
 
   // ---------- queries ----------
@@ -231,6 +240,7 @@ export class Overworld extends Phaser.Scene {
   update(_t: number, dt: number) {
     G.playMs += dt;
     this.online.tick();
+    if (this.board && this.player) this.board.setPosition(this.player.spr.x, this.player.spr.y + 2).setDepth(this.player.spr.depth - 0.00001);
     if (isChatOpen()) return;
     if (this.ui.busy) {
       this.ui.update();
@@ -240,11 +250,22 @@ export class Overworld extends Phaser.Scene {
     if (this.online.pump()) return;
 
     if (Input.pressed('start')) {
-      this.run(() => this.startMenu());
+      void this.run(() => this.startMenu()).then(() => {
+        if (!this.quitToTitle) return;
+        this.quitToTitle = false;
+        net.send({ t: 'leave' });
+        music(null);
+        this.cameras.main.fadeOut(300, 0, 0, 0);
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => this.scene.start('Title'));
+      });
       return;
     }
     if (Input.pressed('a')) {
       this.run(() => this.interact());
+      return;
+    }
+    if (Input.pressed('select') && G.bag.SKATEBOARD) {
+      this.toggleSkate();
       return;
     }
 
@@ -306,7 +327,8 @@ export class Overworld extends Phaser.Scene {
     G.facing = dir;
     this.online.sendMove(nx, ny, dir);
     const run = Input.held('b');
-    void this.stepWalker(p, dir, run ? RUN_MS : WALK_MS).then(() => this.afterStep(dir));
+    const ms = this.skating ? SKATE_MS : run ? RUN_MS : WALK_MS;
+    void this.stepWalker(p, dir, ms).then(() => this.afterStep(dir));
   }
 
   private async afterStep(dir: Dir) {
@@ -509,7 +531,7 @@ export class Overworld extends Phaser.Scene {
   battle(data: Omit<BattleData, 'bg' | 'onEnd'>): Promise<BattleResult> {
     return new Promise((resolve) => {
       sfx('encounter');
-      music(data.trainer?.boss ? 'boss' : 'battle');
+      music(data.net ? 'pvp' : data.trainer?.boss ? 'boss' : data.trainer ? 'trainer' : 'battle');
       const cam = this.cameras.main;
       cam.flash(120, 255, 255, 255);
       this.time.delayedCall(160, () => cam.flash(120, 255, 255, 255));
@@ -559,11 +581,21 @@ export class Overworld extends Phaser.Scene {
     opts.push('BAG', G.name, 'SAVE', 'EXIT');
     let last = 0;
     for (;;) {
-      const i = await this.ui.choose(opts, { x: 240 - 96, y: 2, w: 94, cancel: true, initial: last });
+      const i = await this.ui.choose(opts, { y: 2, cancel: true, initial: last });
       if (i < 0) return;
       last = i;
       const o = opts[i];
-      if (o === 'EXIT') return;
+      if (o === 'EXIT') {
+        const c = await this.ui.ask('Go back to the title screen?', ['SAVE & QUIT', 'QUIT', 'CANCEL']);
+        if (c === 2) continue;
+        if (c === 0) {
+          saveGame();
+          sfx('save');
+        }
+        this.ui.close();
+        this.quitToTitle = true;
+        return;
+      }
       if (o === 'STREETDEX') await streetDex(this, this.ui);
       else if (o === 'CREW') await this.crewMenu();
       else if (o === 'BAG') await this.bagMenu();
@@ -602,6 +634,31 @@ export class Overworld extends Phaser.Scene {
       await useItemOutside(this, id);
       this.ui.close();
     }
+  }
+
+  // ---------- skateboard ----------
+
+  toggleSkate() {
+    if (this.map.indoor) {
+      this.skating = false;
+      void this.run(() => this.ui.say("No skating indoors. Sister Agnes made that a rule after the incident."));
+      return;
+    }
+    this.skating = !this.skating;
+    sfx(this.skating ? 'select' : 'back');
+    this.drawBoard();
+  }
+
+  /** A little board under the player's feet while skating. */
+  drawBoard() {
+    this.board?.destroy();
+    this.board = undefined;
+    if (!this.skating || !this.player) return;
+    const g = this.add.graphics();
+    g.fillStyle(0x202020).fillRect(1, 13, 14, 2);
+    g.fillStyle(0xe8c040).fillRect(2, 12, 12, 2);
+    g.fillStyle(0xd04040).fillRect(4, 12, 2, 1).fillRect(10, 12, 2, 1);
+    this.board = g;
   }
 
   // ---------- helpers for scripts ----------

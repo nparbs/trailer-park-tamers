@@ -40,6 +40,20 @@ Tone rule for all new content: cartoon satire. The joke is the premise and the c
 - [x] Crews sent to the server are checked; rate limits per connection and per address
 - [x] Docker image joined to Scrap Riot's Cloudflare Tunnel network, with a locked deploy key
 
+## v0.3: Vice update ✅
+
+- [x] 22 new drifters, 46 total, including three-stage lines (Malt Liquor Mo, Kush Kyle) and two-stage ones (Crackhead Kenny, Lookmaxer Lyle, Lab Coat Larry, Glock Glen, Dime Bag Dez)
+- [x] New STRAPPED type for gun guys, and about 20 new moves
+- [x] Homeless encampments and dumpster trash heaps replace grass as encounter ground, with tents
+- [x] Grimsby rebuilt with two-lane roads, crosswalks, Tent City, a dumpster lot and a grow house
+- [x] Pawn & Skate shop: buy a skateboard and skate at double speed (bag or SELECT/Shift)
+- [x] Dez the dealer sells 40s, Four Loko, joints, seeds and pills
+- [x] Grow house: plant bag seed in a pot, harvest joints a few minutes later
+- [x] "Not a Meth Lab" trailer in the park with a cook to fight
+- [x] 13 new music tracks with drums; each area picks from several, trainers and PvP get their own themes
+- [x] EXIT in the start menu saves and goes back to the title screen
+- [x] Fixes: moves doing nothing against a trainer's second fighter, menu arrow overlapping FIGHT/CREW, text showing through menus, taps skipping battle text, crew list names running into HP bars
+
 ## v0.2.x: Online follow-ups
 
 - [ ] Server-side progress checks (money, levels and items can currently be edited in a save)

@@ -60,9 +60,9 @@ export function drawHpBar(g: Phaser.GameObjects.Graphics, x: number, y: number, 
 
 function typeTag(l: Layer, x: number, y: number, t: TypeId) {
   const g = l.g();
-  g.fillStyle(TYPE_INFO[t].color).fillRect(x, y, 50, 10);
-  g.fillStyle(0x000000, 0.25).fillRect(x, y + 9, 50, 1);
-  l.text(x + 25 - TYPE_INFO[t].name.length * 4, y + 1, TYPE_INFO[t].name, 0xf8f8f8, 0x404040);
+  g.fillStyle(TYPE_INFO[t].color).fillRect(x, y, 68, 10);
+  g.fillStyle(0x000000, 0.25).fillRect(x, y + 9, 68, 1);
+  l.text(x + 34 - TYPE_INFO[t].name.length * 4, y + 1, TYPE_INFO[t].name, 0xf8f8f8, 0x404040);
 }
 
 // ---------------- crew list ----------------
@@ -88,13 +88,14 @@ export async function pickFromParty(scene: Phaser.Scene, ui: UI, o: PartyOpts = 
     rows.push({ g, y });
     const ico = l.add(scene.add.sprite(14, y + 10, 'w_sp:' + d.sp, 0));
     ico.setOrigin(0.5);
-    l.text(28, y + 4, displayName(d).slice(0, 15), 0xf8f8f8, 0x404048);
-    l.text(28, y + 13, 'Lv' + d.level, 0xf8f8f8, 0x404048);
-    if (d.status) l.text(68, y + 13, STATUS_NAME[d.status], 0xf8d8d8, 0x904040);
-    if (d.hp <= 0) l.text(68, y + 13, 'K.O.', 0xf8d8d8, 0x904040);
+    // Name gets the whole top line; level, status, HP bar and numbers share the second.
+    l.text(28, y + 3, displayName(d).slice(0, 25), 0xf8f8f8, 0x404048);
+    l.text(28, y + 12, 'Lv' + d.level, 0xf8f8f8, 0x404048);
+    if (d.status) l.text(64, y + 12, STATUS_NAME[d.status], 0xf8d8d8, 0x904040);
+    if (d.hp <= 0) l.text(64, y + 12, 'K.O.', 0xf8d8d8, 0x904040);
     const bar = l.g();
-    drawHpBar(bar, 150, y + 5, 48, d.hp / maxHp(d));
-    l.text(166, y + 12, `${String(d.hp).padStart(3)}/${String(maxHp(d)).padStart(3)}`, 0xf8f8f8, 0x404048);
+    drawHpBar(bar, 100, y + 13, 46, d.hp / maxHp(d));
+    l.text(172, y + 12, `${String(d.hp).padStart(3)}/${String(maxHp(d)).padStart(3)}`, 0xf8f8f8, 0x404048);
     if (o.disabled?.(d, i)) {
       const dim = l.g();
       dim.fillStyle(0x000000, 0.3).fillRect(4, y, 232, rowH - 2);
@@ -140,13 +141,12 @@ export async function showSummary(scene: Phaser.Scene, ui: UI, d: Drifter) {
     l = new Layer(scene, 0x6c8c5c);
     const g = l.g();
     g.fillStyle(0x283828).fillRect(0, 0, W, 14);
-    l.text(6, 3, page === 0 ? 'CREW INFO' : 'STREETDEX NOTES', 0xf8f8f8, 0x405040);
-    l.text(W - 70, 3, '< A/B >', 0xc8d8c8, null);
+    l.text(6, 3, page === 0 ? 'INFO' : 'NOTES', 0xf8f8f8, 0x405040);
     l.panel(4, 16, 72, 72, 0xe8f0e0);
     l.add(scene.add.image(40, 52, 'pf_' + d.sp));
     l.text(84, 20, displayName(d).slice(0, 18), 0xf8f8f8, 0x405040);
     l.text(84, 30, 'Lv' + d.level, 0xf8f8f8, 0x405040);
-    sp.types.forEach((t, k) => typeTag(l!, 130 + k * 54, 29, t as TypeId));
+    sp.types.forEach((t, k) => typeTag(l!, 92 + k * 72, 0, t as TypeId));
     if (page === 0) {
       const s = stats(d);
       l.panel(80, 42, 156, 46, 0xf8f8f0);
@@ -237,12 +237,12 @@ export async function pickItem(scene: Phaser.Scene, ui: UI, title = 'BAG'): Prom
 
 // ---------------- shop ----------------
 
-export async function shop(scene: Phaser.Scene, ui: UI, stock: ItemId[]) {
+export async function shop(scene: Phaser.Scene, ui: UI, stock: ItemId[], title = 'GAS-N-GO') {
   for (;;) {
     const l = new Layer(scene, 0x5878b8);
     const g = l.g();
     g.fillStyle(0x283868).fillRect(0, 0, W, 14);
-    l.text(6, 3, 'GAS-N-GO', 0xf8f8f8, 0x283868);
+    l.text(6, 3, title, 0xf8f8f8, 0x283868);
     const money = l.text(W - 80, 3, `$${G.money}`, 0xf8e8a0, null);
     l.panel(4, 16, W - 8, 96, 0xf8f8f8);
     l.panel(4, 114, W - 8, 44, 0xf8f8f8);
@@ -277,9 +277,10 @@ export async function shop(scene: Phaser.Scene, ui: UI, stock: ItemId[]) {
     }
     // Quantity.
     const def = item(pick);
-    const max = Math.max(0, Math.min(99, Math.floor(G.money / def.price)));
+    const owned = def.kind === 'key' && (G.bag[pick] ?? 0) > 0;
+    const max = owned ? 0 : Math.max(0, Math.min(def.kind === 'key' ? 1 : 99, Math.floor(G.money / def.price)));
     if (max === 0) {
-      d0.setText("You can't afford that.");
+      d0.setText(owned ? 'You already have one.' : "You can't afford that.");
       d1.setText('');
       await ui.loop(() => (Input.pressed('a') || Input.pressed('b') ? true : undefined));
       l.destroy();
@@ -360,7 +361,7 @@ export async function streetDex(scene: Phaser.Scene, ui: UI) {
       box.panel(4, 4, W - 8, H - 8, 0xf8f8f8);
       box.add(scene.add.image(44, 48, 'pf_' + id));
       box.text(84, 16, species(id).name.toUpperCase());
-      species(id).types.forEach((t, k) => typeTag(box, 84 + k * 54, 30, t as TypeId));
+      species(id).types.forEach((t, k) => typeTag(box, 84 + k * 72, 30, t as TypeId));
       const own = G.caught.includes(id);
       wrap(own ? species(id).dex : 'Bag one to learn more about them.', 27).slice(0, 6).forEach((ln, k) => box.text(12, 88 + k * 11, ln));
       void ui.loop(() => (Input.pressed('a') || Input.pressed('b') ? true : undefined)).then(() => box.destroy());

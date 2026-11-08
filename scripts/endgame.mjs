@@ -11,7 +11,7 @@ const st = () => page.evaluate(() => {
   const g = window.tpt.game; const ow = g.scene.getScene('Overworld'); const S = window.tpt.state.G;
   return { active: g.scene.getScenes(true).map((s) => s.scene.key), busy: !!(ow?.busy || ow?.ui?.busy), map: S.map, x: ow?.player?.x, y: ow?.player?.y, flags: S.flags, badges: S.badges, money: S.money, party: S.party.map((d) => `${d.sp}:${d.level}:${d.hp}`), bag: S.bag };
 });
-async function mash(cond, max = 120000) { const t0 = Date.now(); while (Date.now() - t0 < max) { const s = await st(); if (cond(s)) return s; await press('KeyZ'); await wait(120); } throw new Error('timeout ' + JSON.stringify(await st())); }
+async function mash(cond, max = 300000) { const t0 = Date.now(); while (Date.now() - t0 < max) { const s = await st(); if (cond(s)) return s; await press('KeyZ'); await wait(120); } await page.screenshot({ path: 'shots/e-stuck.png' }); throw new Error('timeout ' + JSON.stringify(await st())); }
 async function jump(map, x, y, party, extra = {}) {
   await page.evaluate(({ map, x, y, party, extra }) => {
     const { state, creature, game } = window.tpt;

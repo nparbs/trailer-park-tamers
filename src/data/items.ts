@@ -1,4 +1,4 @@
-export type ItemKind = 'catch' | 'heal' | 'cure' | 'revive';
+export type ItemKind = 'catch' | 'heal' | 'cure' | 'revive' | 'key' | 'seed';
 
 export interface ItemDef {
   name: string;
@@ -19,6 +19,12 @@ export const ITEMS = {
   ENERGY: { name: 'Energy Drink', kind: 'heal', price: 400, heal: 60, desc: 'Restores 60 HP. Heart rate not guaranteed.' },
   CASSEROLE: { name: 'Church Casserole', kind: 'heal', price: 1000, heal: 9999, desc: 'Fully restores HP. Made with love and cream of mushroom.' },
   SALTS: { name: 'Smelling Salts', kind: 'cure', price: 120, cures: true, desc: 'Cures OUT, SICK and WASTED.' },
+  FORTY: { name: '40oz Malt Liquor', kind: 'heal', price: 200, heal: 40, desc: 'Restores 40 HP. Comes in a paper bag for dignity.' },
+  LOKO: { name: 'Four Loko', kind: 'heal', price: 300, heal: 50, cures: true, desc: 'Restores 50 HP and cures status. Banned in some states.' },
+  JOINT: { name: 'Joint', kind: 'heal', price: 250, heal: 30, cures: true, desc: 'Restores 30 HP and calms them down. Puff puff pass.' },
+  PILLS: { name: 'Bootleg Pills', kind: 'heal', price: 700, heal: 9999, desc: 'Fully restores HP. Pressed in a garage. Probably fine.' },
+  SEED: { name: 'Bag Seed', kind: 'seed', price: 150, desc: 'Plant it in a pot at the grow house. Harvest JOINTS later.' },
+  SKATEBOARD: { name: 'Skateboard', kind: 'key', price: 1000, desc: 'Use it, or press SELECT/Shift, to skate around twice as fast.' },
   DEFIB: { name: 'Jumper Cables', kind: 'revive', price: 1500, revive: 0.5, desc: 'Brings a knocked-out crew member back with half HP.' },
 } satisfies Record<string, ItemDef>;
 

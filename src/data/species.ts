@@ -9,7 +9,8 @@ export interface Look {
   top: number;
   topStyle: 'tee' | 'coat' | 'vest' | 'hoodie' | 'robe' | 'army' | 'tank' | 'sweater';
   pants: number;
-  prop?: 'bottle' | 'sign' | 'cart' | 'bible' | 'cans' | 'pigeon' | 'cat' | 'guitar' | 'pipe' | 'cards' | 'bag' | 'box' | 'scratchers' | 'paint' | 'bindle' | 'skateboard';
+  prop?: 'bottle' | 'sign' | 'cart' | 'bible' | 'cans' | 'pigeon' | 'cat' | 'guitar' | 'pipe' | 'cards' | 'bag' | 'box' | 'scratchers' | 'paint' | 'bindle' | 'skateboard'
+    | 'gun' | 'joint' | 'forty' | 'handle' | 'pills' | 'beaker' | 'leaf' | 'phone' | 'saw' | 'loko' | 'crackpipe';
   shades?: boolean;
   eyepatch?: boolean;
   big?: boolean;
@@ -184,6 +185,148 @@ export const SPECIES = {
     learnset: [[1, 'HEADBUTT'], [1, 'FUMES'], [10, 'TOUGH_IT_OUT'], [14, 'CHOKEHOLD'], [22, 'HAYMAKER']],
     look: { skin: SKIN.dark, hair: 0x101010, hairStyle: 'bald', beard: 'full', top: 0x303030, topStyle: 'tank', pants: 0x2c3448, big: true, shades: true },
     dex: 'Big Tony\'s muscle. Was a nightclub bouncer until he bounced the owner.',
+  },
+  // ---------- second wave ----------
+  MO: {
+    name: 'Malt Liquor Mo', types: ['BOOZE'], base: { hp: 45, atk: 45, def: 40, spd: 40 }, catchRate: 200, baseExp: 52,
+    learnset: [[1, 'SHOVE'], [1, 'SPIT'], [5, 'BOTTLE_SMASH'], [9, 'BEER_BREATH'], [13, 'LIQUID_COURAGE']],
+    evolves: { level: 14, into: 'FORTYMO' },
+    look: { skin: 0x8c5c38, hair: 0x202020, hairStyle: 'beanie', beard: 'stubble', top: 0x3c4c6c, topStyle: 'hoodie', pants: 0x3c3c3c, prop: 'bottle', nose: 0xb04030 },
+    dex: 'Gets his breakfast in a brown paper bag. It is also his lunch and dinner.',
+  },
+  FORTYMO: {
+    name: '40oz Mo', types: ['BOOZE'], base: { hp: 65, atk: 65, def: 55, spd: 45 }, catchRate: 90, baseExp: 120,
+    learnset: [[1, 'BOTTLE_SMASH'], [1, 'BEER_BREATH'], [14, 'FORTY_SMASH'], [20, 'LIQUID_COURAGE'], [27, 'PROJECTILE_PUKE']],
+    evolves: { level: 30, into: 'HANDLEMO' },
+    look: { skin: 0x8c5c38, hair: 0x202020, hairStyle: 'beanie', beard: 'full', top: 0x2c3c5c, topStyle: 'coat', pants: 0x2c2c2c, prop: 'forty', nose: 0xc03030 },
+    dex: 'Two forties duct-taped to his hands. He calls it Edward Fortyhands. He has not opened a door since.',
+  },
+  HANDLEMO: {
+    name: 'Handle Mo', types: ['BOOZE', 'TOUGH'], base: { hp: 95, atk: 90, def: 75, spd: 40 }, catchRate: 45, baseExp: 190,
+    learnset: [[1, 'FORTY_SMASH'], [1, 'HANDLE'], [30, 'BENDER'], [36, 'HAYMAKER']],
+    look: { skin: 0x8c5c38, hair: 0x202020, hairStyle: 'beanie', beard: 'long', top: 0x2c3c5c, topStyle: 'coat', pants: 0x2c2c2c, prop: 'handle', nose: 0xe03030, big: true },
+    dex: 'Graduated to the plastic handle of vodka. Nobody has ever seen him put it down.',
+  },
+  KENNY: {
+    name: 'Crackhead Kenny', types: ['CHEM'], base: { hp: 40, atk: 55, def: 30, spd: 80 }, catchRate: 190, baseExp: 58,
+    learnset: [[1, 'TWITCH'], [1, 'SPIT'], [6, 'PICKPOCKET'], [10, 'HIT_PIPE'], [15, 'BAD_TRIP']],
+    evolves: { level: 20, into: 'ROCKBOTTOM' },
+    look: { skin: 0xc8a080, hair: 0x5c4c3c, hairStyle: 'wild', beard: 'stubble', top: 0x7c6c5c, topStyle: 'tank', pants: 0x4c5c7c, prop: 'crackpipe', thin: true },
+    dex: 'Will wash your windshield whether you want it washed or not. Runs faster than the bus.',
+  },
+  ROCKBOTTOM: {
+    name: 'Rock Bottom Kenny', types: ['CHEM', 'PSYCHO'], base: { hp: 55, atk: 85, def: 40, spd: 110 }, catchRate: 60, baseExp: 160,
+    learnset: [[1, 'TWITCH'], [1, 'HIT_PIPE'], [20, 'MELTDOWN'], [26, 'CHEM_BURN'], [32, 'BONE_SMASH']],
+    look: { skin: 0xb8b0a0, hair: 0x6c5c4c, hairStyle: 'wild', beard: 'full', top: 0x6c5c4c, topStyle: 'tank', pants: 0x3c4c6c, prop: 'crackpipe', thin: true, shades: true },
+    dex: 'Has hit rock bottom so many times he started digging. Claims he can hear colours.',
+  },
+  LYLE: {
+    name: 'Lookmaxer Lyle', types: ['SLICK'], base: { hp: 45, atk: 50, def: 55, spd: 65 }, catchRate: 150, baseExp: 62,
+    learnset: [[1, 'SHOVE'], [1, 'MEWING'], [7, 'MOG'], [12, 'FAST_TALK'], [17, 'SUCKER_PUNCH']],
+    evolves: { level: 22, into: 'MOGGER' },
+    look: { skin: 0xe0b088, hair: 0x302010, hairStyle: 'short', top: 0x202020, topStyle: 'tank', pants: 0x5c5c6c, prop: 'phone' },
+    dex: 'Lives in his car but has a 14-step skincare routine. Rates everyone out of ten. You got a four.',
+  },
+  MOGGER: {
+    name: 'Mogger Lyle', types: ['SLICK', 'PSYCHO'], base: { hp: 60, atk: 80, def: 75, spd: 85 }, catchRate: 45, baseExp: 165,
+    learnset: [[1, 'MOG'], [1, 'MEWING'], [22, 'BONE_SMASH'], [28, 'THREE_CARD']],
+    look: { skin: 0xd8a070, hair: 0x302010, hairStyle: 'short', top: 0xe0e0e0, topStyle: 'tank', pants: 0x3c3c4c, prop: 'phone', shades: true, big: true },
+    dex: 'Hit himself in the face with a hammer to fix his jaw. He will tell you it worked. At length.',
+  },
+  BETTY: {
+    name: 'Bitch Ass Betty', types: ['SLICK', 'FERAL'], base: { hp: 60, atk: 70, def: 50, spd: 70 }, catchRate: 80, baseExp: 110,
+    learnset: [[1, 'SPIT'], [1, 'SLAP_FIGHT'], [8, 'MAD_SHIT'], [13, 'SCRATCH'], [18, 'BITE'], [24, 'SUCKER_PUNCH']],
+    look: { skin: 0xf0c8a0, hair: 0xe8c860, hairStyle: 'bun', top: 0xe060a0, topStyle: 'tank', pants: 0x6c4c8c, mouth: 0xc02050, prop: 'loko' },
+    dex: 'Banned from every Waffle House in the county. Started it, finished it, filmed it.',
+  },
+  KYLE: {
+    name: 'Kush Kyle', types: ['CHEM'], base: { hp: 55, atk: 40, def: 50, spd: 35 }, catchRate: 190, baseExp: 55,
+    learnset: [[1, 'SHOVE'], [1, 'FUMES'], [6, 'HOTBOX'], [11, 'MUNCHIES'], [15, 'BAD_TRIP']],
+    evolves: { level: 16, into: 'GROWOP' },
+    look: { skin: 0xe8b890, hair: 0x8c6c3c, hairStyle: 'long', beard: 'stubble', top: 0x4c8c3c, topStyle: 'hoodie', pants: 0x5c5c4c, prop: 'joint' },
+    dex: 'Has been about to start a business for eleven years. The business is weed.',
+  },
+  GROWOP: {
+    name: 'Grow Op Kyle', types: ['CHEM', 'FERAL'], base: { hp: 75, atk: 55, def: 70, spd: 40 }, catchRate: 90, baseExp: 125,
+    learnset: [[1, 'HOTBOX'], [1, 'MUNCHIES'], [16, 'LEECH'], [22, 'CHEM_BURN']],
+    evolves: { level: 32, into: 'DISPENSARY' },
+    look: { skin: 0xe8b890, hair: 0x8c6c3c, hairStyle: 'long', beard: 'full', top: 0x3c6c2c, topStyle: 'vest', pants: 0x4c4c3c, prop: 'leaf' },
+    dex: 'Turned a storage unit into a jungle. The power bill is higher than the rent he does not pay.',
+  },
+  DISPENSARY: {
+    name: 'Dispensary Kyle', types: ['CHEM', 'SLICK'], base: { hp: 95, atk: 70, def: 90, spd: 50 }, catchRate: 45, baseExp: 190,
+    learnset: [[1, 'HOTBOX'], [1, 'RE_UP'], [32, 'FAST_TALK'], [38, 'LAB_BLAST']],
+    look: { skin: 0xe8b890, hair: 0x8c6c3c, hairStyle: 'bun', beard: 'long', top: 0xe8e8e8, topStyle: 'coat', pants: 0x3c4c3c, prop: 'leaf', shades: true, big: true },
+    dex: 'Went legit. Wears a lab coat and calls it medicine. Still sells out the back door.',
+  },
+  LARRY: {
+    name: 'Lab Coat Larry', types: ['CHEM', 'SCRAP'], base: { hp: 50, atk: 70, def: 45, spd: 55 }, catchRate: 75, baseExp: 90,
+    learnset: [[1, 'FUMES'], [1, 'CAN_TOSS'], [8, 'TWITCH'], [14, 'TWEAK_OUT'], [20, 'CHEM_BURN']],
+    evolves: { level: 25, into: 'BLUEBATCH' },
+    look: { skin: 0xf0d0b0, hair: 0xb0b0b0, hairStyle: 'bald', beard: 'stubble', top: 0xe8e8e0, topStyle: 'coat', pants: 0x5c5c6c, prop: 'beaker', shades: true },
+    dex: 'Used to teach high school chemistry. Still teaches chemistry, just not to anyone with a diploma.',
+  },
+  BLUEBATCH: {
+    name: 'Blue Batch Larry', types: ['CHEM', 'SCRAP'], base: { hp: 70, atk: 100, def: 60, spd: 70 }, catchRate: 30, baseExp: 180,
+    learnset: [[1, 'CHEM_BURN'], [1, 'TWEAK_OUT'], [25, 'LAB_BLAST'], [32, 'RUSTY_PIPE']],
+    look: { skin: 0xf0d0b0, hair: 0xb0b0b0, hairStyle: 'bald', beard: 'full', top: 0xe8d040, topStyle: 'robe', pants: 0xe8d040, prop: 'beaker', shades: true, big: true },
+    dex: 'Wears a yellow hazmat suit to the grocery store. Nobody stops him. Nobody wants to know.',
+  },
+  GLEN: {
+    name: 'Glock Glen', types: ['STRAPPED'], base: { hp: 55, atk: 65, def: 45, spd: 60 }, catchRate: 75, baseExp: 88,
+    learnset: [[1, 'PISTOL_WHIP'], [1, 'WARNING_SHOT'], [9, 'TACTICAL'], [15, 'CELEBRATORY'], [21, 'SPRAY_PRAY']],
+    evolves: { level: 24, into: 'SWITCHGLEN' },
+    look: { skin: 0xd8a070, hair: 0x202020, hairStyle: 'cap', top: 0x303030, topStyle: 'hoodie', pants: 0x3c3c48, prop: 'gun' },
+    dex: 'Keeps it on him at all times. Has fired it twice: once at a raccoon and once at his own foot.',
+  },
+  SWITCHGLEN: {
+    name: 'Switch Glen', types: ['STRAPPED', 'TOUGH'], base: { hp: 70, atk: 95, def: 65, spd: 75 }, catchRate: 30, baseExp: 175,
+    learnset: [[1, 'PISTOL_WHIP'], [1, 'SPRAY_PRAY'], [24, 'HAYMAKER'], [30, 'CELEBRATORY']],
+    look: { skin: 0xd8a070, hair: 0x202020, hairStyle: 'cap', beard: 'full', top: 0x202020, topStyle: 'army', pants: 0x2c2c34, prop: 'gun', shades: true, big: true },
+    dex: 'Made it full auto with a part off the internet. Now it mostly fires sideways.',
+  },
+  CAL: {
+    name: 'Open Carry Cal', types: ['STRAPPED', 'BOOZE'], base: { hp: 65, atk: 60, def: 60, spd: 45 }, catchRate: 90, baseExp: 95,
+    learnset: [[1, 'WARNING_SHOT'], [1, 'BOTTLE_SMASH'], [10, 'PISTOL_WHIP'], [16, 'FORTY_SMASH'], [24, 'SPRAY_PRAY']],
+    look: { skin: 0xf0c098, hair: 0x8c6c4c, hairStyle: 'cap', beard: 'full', top: 0x6c7c4c, topStyle: 'army', pants: 0x4c5c8c, prop: 'gun', nose: 0xd05050 },
+    dex: 'Walks into the gas station with a rifle on his back to buy one lottery ticket. Every single day.',
+  },
+  DEZ: {
+    name: 'Dime Bag Dez', types: ['SLICK', 'CHEM'], base: { hp: 50, atk: 55, def: 50, spd: 75 }, catchRate: 120, baseExp: 70,
+    learnset: [[1, 'PICKPOCKET'], [1, 'FAST_TALK'], [7, 'FUMES'], [12, 'RE_UP'], [17, 'SUCKER_PUNCH']],
+    evolves: { level: 20, into: 'PLUG' },
+    look: { skin: 0xa86c40, hair: 0x101010, hairStyle: 'cap', top: 0xd0d0d0, topStyle: 'hoodie', pants: 0x3c4c6c, prop: 'bag' },
+    dex: 'Always on the corner, always just waiting for a friend. He has a lot of friends.',
+  },
+  PLUG: {
+    name: 'The Plug', types: ['SLICK', 'CHEM'], base: { hp: 70, atk: 75, def: 70, spd: 95 }, catchRate: 40, baseExp: 170,
+    learnset: [[1, 'SUCKER_PUNCH'], [1, 'RE_UP'], [20, 'THREE_CARD'], [28, 'CHEM_BURN']],
+    look: { skin: 0xa86c40, hair: 0x101010, hairStyle: 'short', top: 0x7c2c8c, topStyle: 'coat', pants: 0x202020, prop: 'phone', shades: true },
+    dex: 'Three phones, no last name. If you need something, you already know. If you do not, you do not.',
+  },
+  LISA: {
+    name: 'Four Loko Lisa', types: ['BOOZE', 'CHEM'], base: { hp: 55, atk: 60, def: 40, spd: 70 }, catchRate: 140, baseExp: 68,
+    learnset: [[1, 'BEER_BREATH'], [1, 'TWITCH'], [8, 'BOTTLE_SMASH'], [13, 'LOKO_RAGE'], [19, 'TWEAK_OUT']],
+    look: { skin: 0xf0c8a0, hair: 0xd04040, hairStyle: 'long', top: 0x40c0c0, topStyle: 'tee', pants: 0x303040, prop: 'loko' },
+    dex: 'Equal parts caffeine and malt. Has been awake and drunk since the drink was legal.',
+  },
+  NED: {
+    name: 'Nodding Ned', types: ['CHEM'], base: { hp: 75, atk: 40, def: 60, spd: 20 }, catchRate: 170, baseExp: 60,
+    learnset: [[1, 'NOD_OFF'], [1, 'STARE'], [7, 'FUMES'], [12, 'HOTBOX'], [18, 'BAD_TRIP']],
+    look: { skin: 0xc8b8a0, hair: 0x6c5c4c, hairStyle: 'hood', beard: 'stubble', top: 0x5c5c6c, topStyle: 'hoodie', pants: 0x3c3c48, thin: true },
+    dex: 'Falls asleep standing up at the bus stop. Wakes up exactly when you try to take his stuff.',
+  },
+  PHYLLIS: {
+    name: 'Pill Mill Phyllis', types: ['CHEM', 'HOLY'], base: { hp: 60, atk: 45, def: 65, spd: 40 }, catchRate: 100, baseExp: 85,
+    learnset: [[1, 'REPENT'], [1, 'FUMES'], [9, 'LAYING_HANDS'], [14, 'HOTBOX'], [20, 'BRIMSTONE']],
+    look: { skin: 0xf0d8c0, hair: 0xd8d8e8, hairStyle: 'bun', top: 0x8cb8d8, topStyle: 'sweater', pants: 0x8cb8d8, prop: 'pills' },
+    dex: 'A sweet old lady with nine doctors and nine prescriptions. Her purse rattles like a maraca.',
+  },
+  CARL: {
+    name: 'Catalytic Carl', types: ['SCRAP', 'SLICK'], base: { hp: 55, atk: 70, def: 55, spd: 60 }, catchRate: 110, baseExp: 80,
+    learnset: [[1, 'CAN_TOSS'], [1, 'PICKPOCKET'], [9, 'HUBCAP'], [14, 'SAWZALL'], [21, 'SUCKER_PUNCH']],
+    look: { skin: 0xe0b088, hair: 0x5c4c3c, hairStyle: 'beanie', beard: 'stubble', top: 0x4c6c8c, topStyle: 'hoodie', pants: 0x3c3c3c, prop: 'saw' },
+    dex: 'Can get under a Prius and back out in ninety seconds. Your car now sounds like a Harley.',
   },
 } satisfies Record<string, SpeciesDef>;
 

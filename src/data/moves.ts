@@ -87,6 +87,30 @@ export const MOVES = {
   HUBCAP: { name: 'Hubcap Fling', type: 'SCRAP', power: 60, acc: 95, pp: 20, highCrit: true },
   RUSTY_PIPE: { name: 'Rusty Pipe', type: 'SCRAP', power: 90, acc: 90, pp: 10, inflict: { status: 'sick', chance: 20 } },
   TARP_UP: { name: 'Tarp Up', type: 'SCRAP', power: 0, acc: 0, pp: 20, stat: { who: 'self', stat: 'def', stages: 1 } },
+
+  // STRAPPED
+  PISTOL_WHIP: { name: 'Pistol Whip', type: 'STRAPPED', power: 60, acc: 100, pp: 25 },
+  WARNING_SHOT: { name: 'Warning Shot', type: 'STRAPPED', power: 0, acc: 100, pp: 20, stat: { who: 'foe', stat: 'atk', stages: -1 }, text: 'BLAM! Into the air. Everyone flinched.' },
+  SPRAY_PRAY: { name: 'Spray & Pray', type: 'STRAPPED', power: 95, acc: 70, pp: 10 },
+  CELEBRATORY: { name: 'Celebratory Fire', type: 'STRAPPED', power: 75, acc: 90, pp: 15, highCrit: true },
+  TACTICAL: { name: 'Tactical Reload', type: 'STRAPPED', power: 0, acc: 0, pp: 20, stat: { who: 'self', stat: 'acc', stages: 2 } },
+
+  // More vice
+  HOTBOX: { name: 'Hotbox', type: 'CHEM', power: 0, acc: 75, pp: 15, inflict: { status: 'out', chance: 100 }, text: 'The air got real thick in here.' },
+  MUNCHIES: { name: 'Munchies', type: 'CHEM', power: 0, acc: 0, pp: 10, heal: 0.5, text: 'Ate a whole sleeve of crackers.' },
+  HIT_PIPE: { name: 'Hit the Pipe', type: 'CHEM', power: 0, acc: 0, pp: 15, stat: { who: 'self', stat: 'atk', stages: 2 } },
+  LAB_BLAST: { name: 'Lab Explosion', type: 'CHEM', power: 130, acc: 85, pp: 5, recoil: 0.4, text: 'KA-BOOM! Somebody forgot to open a window.' },
+  NOD_OFF: { name: 'Nod Off', type: 'CHEM', power: 0, acc: 0, pp: 10, heal: 0.5 },
+  FORTY_SMASH: { name: '40oz Smash', type: 'BOOZE', power: 75, acc: 95, pp: 15 },
+  LOKO_RAGE: { name: 'Loko Rage', type: 'BOOZE', power: 85, acc: 90, pp: 10, inflict: { status: 'wasted', chance: 30 } },
+  HANDLE: { name: 'Pull from the Handle', type: 'BOOZE', power: 0, acc: 0, pp: 10, heal: 0.5 },
+  MAD_SHIT: { name: 'Talk Mad Shit', type: 'SLICK', power: 0, acc: 100, pp: 20, stat: { who: 'foe', stat: 'def', stages: -2 } },
+  SLAP_FIGHT: { name: 'Slap Fight', type: 'FERAL', power: 55, acc: 100, pp: 20, priority: 1 },
+  MOG: { name: 'Mog', type: 'SLICK', power: 0, acc: 100, pp: 20, stat: { who: 'foe', stat: 'atk', stages: -2 }, text: 'Got absolutely mogged.' },
+  MEWING: { name: 'Mewing', type: 'SLICK', power: 0, acc: 0, pp: 20, stat: { who: 'self', stat: 'def', stages: 2 } },
+  BONE_SMASH: { name: 'Bone Smash', type: 'PSYCHO', power: 120, acc: 85, pp: 5, recoil: 0.33 },
+  SAWZALL: { name: 'Sawzall', type: 'SCRAP', power: 80, acc: 95, pp: 15, highCrit: true },
+  RE_UP: { name: 'Re-Up', type: 'SLICK', power: 0, acc: 0, pp: 10, heal: 0.5 },
 } satisfies Record<string, MoveDef>;
 
 export type MoveId = keyof typeof MOVES;

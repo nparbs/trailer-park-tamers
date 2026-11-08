@@ -47,7 +47,7 @@ export class Title extends Phaser.Scene {
     for (const t of [t1, t2]) if ((t as any).setDropShadow) t.setDropShadow(2, 2, 0x201828, 1);
     const press = this.add.bitmapText(120, 92, FONT, 'PRESS START', 8).setOrigin(0.5, 0).setTint(0xf8f8f8);
     this.tweens.add({ targets: press, alpha: 0.1, duration: 500, yoyo: true, repeat: -1 });
-    this.add.bitmapText(2, 2, FONT, 'v0.2', 8).setTint(0x806878);
+    this.add.bitmapText(2, 2, FONT, 'v0.3', 8).setTint(0x806878);
 
     music('title');
     this.time.delayedCall(400, () => (this.ready = true));

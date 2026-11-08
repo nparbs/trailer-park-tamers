@@ -135,7 +135,8 @@ export function sfx(name: Sfx) {
 
 interface Track {
   bpm: number;
-  voices: { wave: OscillatorType; vol: number; notes: string }[];
+  /** 'kick', 'snare' and 'hat' voices play drums: any token other than '.' or '-' is a hit. */
+  voices: { wave: OscillatorType | 'kick' | 'snare' | 'hat'; vol: number; notes: string }[];
 }
 
 const TRACKS: Record<string, Track> = {
@@ -175,6 +176,117 @@ const TRACKS: Record<string, Track> = {
       { wave: 'triangle', vol: 0.24, notes: 'D2 D3 D2 D3 D2 D3 D2 D3 C2 C3 C2 C3 C2 C3 C2 C3 A#1 A#2 A#1 A#2 A#1 A#2 A#1 A#2 A1 A2 A1 A2 A1 A2 A1 A2 G1 G2 G1 G2 G1 G2 G1 G2 A#1 A#2 A#1 A#2 C2 C3 C2 C3 A1 A2 A1 A2 A1 A2 A1 A2 A1 A2 A1 A2 C#2 C#3 E2 E3' },
     ],
   },
+  park2: {
+    bpm: 96,
+    voices: [
+      { wave: 'triangle', vol: 0.2, notes: 'G3 . D4 . G3 . D4 . C4 . G3 . C4 . G3 . D3 . A3 . D3 . A3 . G3 . D4 . B3 . D4 .' },
+      { wave: 'square', vol: 0.06, notes: 'B4 - - D5 - B4 A4 G4 - - - . E4 G4 A4 - G4 - E4 D4 - - - . G4 A4 B4 D5 B4 A4 G4 - - -' },
+      { wave: 'hat', vol: 0.05, notes: '. x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x' },
+    ],
+  },
+  park: {
+    bpm: 112,
+    voices: [
+      { wave: 'square', vol: 0.07, notes: 'D4 F#4 A4 - F#4 A4 B4 A4 F#4 - D4 - E4 - - . D4 F#4 A4 - B4 D5 B4 A4 F#4 - E4 - D4 - - .' },
+      { wave: 'triangle', vol: 0.2, notes: 'D3 . A3 . D3 . A3 . G2 . D3 . A2 . E3 . D3 . A3 . G2 . D3 . A2 . E3 . D3 . . .' },
+      { wave: 'kick', vol: 0.4, notes: 'x . . . x . . . x . . . x . . . x . . . x . . . x . . . x . . .' },
+    ],
+  },
+  route2: {
+    bpm: 126,
+    voices: [
+      { wave: 'square', vol: 0.07, notes: 'E4 - G4 - A4 - B4 - D5 - B4 A4 G4 - E4 - D4 - E4 - G4 - A4 - G4 - E4 - D4 - - - E4 - G4 - A4 - B4 - E5 - D5 B4 A4 - G4 - A4 - B4 - A4 G4 E4 - D4 - E4 - - - - -' },
+      { wave: 'triangle', vol: 0.2, notes: 'E2 . B2 . E2 . B2 . C3 . G2 . C3 . G2 . D3 . A2 . D3 . A2 . E2 . B2 . E2 . B2 .' },
+      { wave: 'hat', vol: 0.04, notes: 'x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x .' },
+    ],
+  },
+  camp: {
+    bpm: 84,
+    voices: [
+      { wave: 'triangle', vol: 0.22, notes: 'A2 . . . E3 . . . F2 . . . C3 . . . D2 . . . A2 . . . E2 . . . G#2 . . .' },
+      { wave: 'square', vol: 0.05, notes: 'C5 - B4 - A4 - - - . . E4 - F4 - E4 - D4 - - - . . C4 - D4 - E4 - - - - - B3 - - - - - - - . . . .' },
+      { wave: 'hat', vol: 0.03, notes: '. . x . . . x . . . x . . . x . . . x . . . x . . . x . . . x .' },
+    ],
+  },
+  town2: {
+    bpm: 104,
+    voices: [
+      { wave: 'square', vol: 0.07, notes: 'C5 - A4 - G4 - E4 - G4 A4 C5 - D5 - C5 - A4 - G4 - E4 - D4 - E4 - G4 - - - . . C5 - D5 - E5 - D5 C5 A4 - G4 - A4 - C5 - D5 - C5 - A4 - G4 - E4 - D4 - C4 - - - - -' },
+      { wave: 'triangle', vol: 0.2, notes: 'F2 . C3 . F2 . C3 . C3 . G2 . C3 . G2 . A2 . E3 . A2 . E3 . G2 . D3 . G2 . D3 .' },
+      { wave: 'kick', vol: 0.35, notes: 'x . . . . . x . x . . . . . . . x . . . . . x . x . . . . . . .' },
+      { wave: 'snare', vol: 0.12, notes: '. . . . x . . . . . . . x . . . . . . . x . . . . . . . x . . .' },
+    ],
+  },
+  corner: {
+    bpm: 140,
+    voices: [
+      { wave: 'kick', vol: 0.5, notes: 'x . . . . . . x . . x . . . . . x . . . . . . . . . x . . . . .' },
+      { wave: 'hat', vol: 0.05, notes: 'x x x x x x x x x x x x x x x x x x x x x x x x x . x x x x x x' },
+      { wave: 'snare', vol: 0.15, notes: '. . . . . . . . x . . . . . . . . . . . . . . . x . . . . . . .' },
+      { wave: 'triangle', vol: 0.24, notes: 'C2 - - - - - - - - - D#2 - - - - - G1 - - - - - - - - - A#1 - - - - -' },
+      { wave: 'square', vol: 0.04, notes: 'G4 . . D#5 . . D5 . C5 . . . A#4 . . . G4 . . D#5 . . D5 . F5 . . . D#5 . D5 .' },
+    ],
+  },
+  trap: {
+    bpm: 144,
+    voices: [
+      { wave: 'kick', vol: 0.5, notes: 'x . . . . . . . . . x . . . . . x . . x . . . . . . . . x . . .' },
+      { wave: 'hat', vol: 0.05, notes: 'x . x . x . x x x . x . x . x . x . x . x x x x x . x . x . x .' },
+      { wave: 'snare', vol: 0.15, notes: '. . . . . . . . x . . . . . . . . . . . . . . . x . . . . . . .' },
+      { wave: 'square', vol: 0.05, notes: 'A4 . . C5 . . E5 . . . D5 . C5 . B4 . A4 . . C5 . . F5 . . . E5 . D5 . . .' },
+      { wave: 'triangle', vol: 0.22, notes: 'A1 - - - - - - - - - - - - - - - F1 - - - - - - - - - E1 - - - - -' },
+    ],
+  },
+  lab: {
+    bpm: 132,
+    voices: [
+      { wave: 'square', vol: 0.05, notes: 'E5 . D#5 . E5 . B4 . C5 . B4 . A4 . . . E5 . D#5 . E5 . B4 . D5 . C5 . B4 . . .' },
+      { wave: 'triangle', vol: 0.2, notes: 'E2 E2 E3 E2 E2 E2 E3 E2 A1 A1 A2 A1 A1 A1 A2 A1 E2 E2 E3 E2 E2 E2 E3 E2 B1 B1 B2 B1 B1 B1 B2 B1' },
+      { wave: 'hat', vol: 0.04, notes: 'x . x x x . x x x . x x x . x x x . x x x . x x x . x x x . x x' },
+    ],
+  },
+  grow: {
+    bpm: 72,
+    voices: [
+      { wave: 'triangle', vol: 0.22, notes: 'D3 . . . A2 . . . B2 . . . F#2 . . . G2 . . . D2 . . . G2 . . . A2 . . .' },
+      { wave: 'square', vol: 0.04, notes: 'F#4 - - - A4 - - - D5 - - - C#5 - - - B4 - - - A4 - - - G4 - - - A4 - - -' },
+      { wave: 'kick', vol: 0.3, notes: 'x . . . . . . . x . . x . . . . x . . . . . . . x . . x . . . .' },
+      { wave: 'snare', vol: 0.08, notes: '. . . . x . . . . . . . x . . . . . . . x . . . . . . . x . . .' },
+    ],
+  },
+  soup: {
+    bpm: 92,
+    voices: [
+      { wave: 'triangle', vol: 0.2, notes: 'C4 E4 G4 C5 B4 G4 E4 D4 C4 E4 G4 A4 G4 - - . F4 A4 C5 F5 E5 C5 A4 G4 E4 G4 C5 B4 C5 - - .' },
+      { wave: 'square', vol: 0.03, notes: 'C3 . . . G2 . . . A2 . . . E2 . . . F2 . . . C3 . . . G2 . . . C3 . . .' },
+    ],
+  },
+  shop: {
+    bpm: 128,
+    voices: [
+      { wave: 'square', vol: 0.06, notes: 'E5 C5 G4 C5 E5 - G5 - F5 D5 A4 D5 F5 - A5 - G5 E5 C5 E5 G5 - C6 - B5 - G5 - D5 - - .' },
+      { wave: 'triangle', vol: 0.2, notes: 'C3 . G2 . C3 . G2 . D3 . A2 . D3 . A2 . E3 . C3 . E3 . C3 . G2 . D3 . G2 . . .' },
+      { wave: 'hat', vol: 0.03, notes: '. x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x' },
+    ],
+  },
+  trainer: {
+    bpm: 172,
+    voices: [
+      { wave: 'square', vol: 0.08, notes: 'A4 . A4 . C5 . A4 . D5 . C5 . A4 . G4 . A4 . A4 . C5 . A4 . E5 . D5 . C5 . . . F5 . E5 . D5 . C5 . D5 . C5 . A#4 . A4 . G4 . A4 . C5 . E5 . A5 . G#5 . . .' },
+      { wave: 'triangle', vol: 0.22, notes: 'A1 A2 A1 A2 A1 A2 A1 A2 F1 F2 F1 F2 G1 G2 G1 G2 A1 A2 A1 A2 A1 A2 A1 A2 F1 F2 F1 F2 E1 E2 E1 E2 D2 D3 D2 D3 D2 D3 D2 D3 A#1 A#2 A#1 A#2 C2 C3 C2 C3 A1 A2 A1 A2 C2 C3 E2 E3 E1 E2 E1 E2 E1 E2 G#1 G#2' },
+      { wave: 'kick', vol: 0.3, notes: 'x . . . x . . . x . . . x . . . x . . . x . . . x . . . x . . .' },
+      { wave: 'snare', vol: 0.1, notes: '. . x . . . x . . . x . . . x . . . x . . . x . . . x . . . x .' },
+    ],
+  },
+  pvp: {
+    bpm: 180,
+    voices: [
+      { wave: 'square', vol: 0.08, notes: 'E5 . E5 . G5 . E5 . D5 . C5 . D5 . B4 . C5 . C5 . E5 . C5 . B4 . A4 . B4 . G#4 . A4 . C5 . E5 . A5 . G5 . F5 . E5 . D5 . C5 . D5 . E5 . . . . . . .' },
+      { wave: 'triangle', vol: 0.22, notes: 'E2 E3 E2 E3 E2 E3 E2 E3 A1 A2 A1 A2 A1 A2 A1 A2 F1 F2 F1 F2 F1 F2 F1 F2 E1 E2 E1 E2 E1 E2 E1 E2' },
+      { wave: 'kick', vol: 0.35, notes: 'x . . x . . x . x . . x . . x . x . . x . . x . x . . x . . x .' },
+      { wave: 'hat', vol: 0.04, notes: '. x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x' },
+    ],
+  },
   inside: {
     bpm: 100,
     voices: [
@@ -194,7 +306,19 @@ const TRACKS: Record<string, Track> = {
 let current: string | null = null;
 let timer: number | null = null;
 
-export function music(name: string | null) {
+function drum(kind: 'kick' | 'snare' | 'hat', t: number, vol: number, bus: GainNode) {
+  if (kind === 'kick') tone(150, t, 0.12, 'sine', vol, bus, 45);
+  else if (kind === 'snare') noise(t, 0.12, vol, bus, 1200);
+  else noise(t, 0.03, vol, bus, 7000);
+}
+
+/** Play a track, or one picked at random from a list (keeping the current one if it's in the list). */
+export function music(choice: string | string[] | null) {
+  let name: string | null;
+  if (Array.isArray(choice)) {
+    if (current && choice.includes(current)) return;
+    name = choice[Math.floor(Math.random() * choice.length)] ?? null;
+  } else name = choice;
   if (name === current) return;
   current = name;
   if (timer !== null) {
@@ -218,9 +342,13 @@ export function music(name: string | null) {
       for (const v of voices) {
         const tok = v.tokens[idx % v.tokens.length];
         if (tok === '.' || tok === '-' || !tok) continue;
+        if (v.wave === 'kick' || v.wave === 'snare' || v.wave === 'hat') {
+          drum(v.wave, nextT, v.vol, bus);
+          continue;
+        }
         let hold = 1;
         while (v.tokens[(idx + hold) % v.tokens.length] === '-' && hold < 16) hold++;
-        tone(freqOf(tok), nextT, step * hold * 0.92, v.wave, v.vol, bus);
+        tone(freqOf(tok), nextT, step * hold * 0.92, v.wave as OscillatorType, v.vol, bus);
       }
       idx = (idx + 1) % len;
       nextT += step;
