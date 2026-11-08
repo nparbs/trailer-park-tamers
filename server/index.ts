@@ -62,7 +62,7 @@ function serveStatic(req: http.IncomingMessage, res: http.ServerResponse) {
 const server = http.createServer((req, res) => {
   if (req.url === '/health') {
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-    res.end(JSON.stringify({ ok: true, online: world.online }));
+    res.end(JSON.stringify({ ok: true, version: __APP_VERSION__, online: world.online }));
     return;
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') {

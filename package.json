@@ -12,7 +12,8 @@
     "test": "vitest run",
     "shots": "node scripts/screenshots.mjs",
     "build:server": "node scripts/build-server.mjs",
-    "server": "node scripts/build-server.mjs && node dist-server/index.mjs"
+    "server": "node scripts/build-server.mjs && node dist-server/index.mjs",
+    "ship": "node scripts/ship.mjs"
   },
   "dependencies": {
     "@fontsource/press-start-2p": "5.2.7",

@@ -6,3 +6,5 @@ shots
 dist-server
 data
 .env
+.deploy.local.json
+.claude/settings.local.json
