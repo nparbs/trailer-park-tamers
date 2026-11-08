@@ -4,6 +4,7 @@ import { buildTextures } from './gfx/textures';
 import { Input, installInput } from './game/input';
 import { resumeMusic, unlockAudio } from './audio/sound';
 import { Title } from './scenes/Title';
+import { installChat } from './ui/chat';
 import { Overworld } from './scenes/Overworld';
 import { BattleScene } from './scenes/Battle';
 
@@ -19,6 +20,7 @@ class Boot extends Phaser.Scene {
 }
 
 installInput();
+installChat();
 
 // Audio can only start after the first tap or key press.
 let unlocked = false;
@@ -51,7 +53,7 @@ game.events.on(Phaser.Core.Events.POST_STEP, () => Input.endFrame());
 
 // Handy for debugging in the console and for the screenshot script.
 if (import.meta.env.DEV) {
-  void Promise.all([import('./game/state'), import('./game/creature')]).then(([state, creature]) => {
-    (window as any).tpt = { game, state, creature, Input };
+  void Promise.all([import('./game/state'), import('./game/creature'), import('./net/client')]).then(([state, creature, client]) => {
+    (window as any).tpt = { game, state, creature, Input, net: client.net };
   });
 }

@@ -9,6 +9,7 @@ import { TYPE_INFO, type TypeId } from '../data/types';
 import { displayName, expForLevel, maxHp, stats, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
 import { G } from '../game/state';
+import { net } from '../net/client';
 import { sfx } from '../audio/sound';
 import { wrap } from '../gfx/font';
 import { cursor, H, label, panel, TEXT, UI, W } from './ui';
@@ -72,6 +73,8 @@ export interface PartyOpts {
   /** Highlight entries that can't be picked (e.g. knocked out when switching in). */
   disabled?: (d: Drifter, i: number) => boolean;
   list?: Drifter[];
+  /** Where the cursor starts. */
+  initial?: number;
 }
 
 export async function pickFromParty(scene: Phaser.Scene, ui: UI, o: PartyOpts = {}): Promise<number> {
@@ -100,7 +103,7 @@ export async function pickFromParty(scene: Phaser.Scene, ui: UI, o: PartyOpts = 
   const msgP = l.panel(0, H - 18, W, 18);
   void msgP;
   l.text(8, H - 12, o.title ?? 'Choose a crew member.');
-  let i = 0;
+  let i = Math.max(0, Math.min(list.length - 1, o.initial ?? 0));
   const draw = () => {
     rows.forEach((r, k) => {
       r.g.clear();
@@ -375,7 +378,7 @@ export async function profile(scene: Phaser.Scene, ui: UI) {
   const l = new Layer(scene, 0x488868);
   l.panel(8, 12, W - 16, H - 24, 0xf0f8f0);
   l.text(20, 24, 'STREET ID CARD');
-  l.add(scene.add.image(196, 60, 'tf_player')).setScale(1);
+  l.add(scene.add.image(196, 60, 'tf_out' + (G.outfit ?? 0))).setScale(1);
   l.text(20, 44, `NAME   ${G.name}`);
   l.text(20, 58, `MONEY  $${G.money}`);
   l.text(20, 72, `DEX    ${G.caught.length}`);
@@ -383,6 +386,8 @@ export async function profile(scene: Phaser.Scene, ui: UI) {
   l.text(20, 86, `TIME   ${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`);
   l.text(20, 106, 'STREET CRED:');
   l.text(20, 120, G.badges.length ? G.badges.join(', ') : 'NONE YET', 0x806040);
+  if (net.isOnline) l.text(20, 136, `CODE ${net.prettyCode}`, 0x606068);
+  else l.text(20, 136, 'OFFLINE: saves stay here', 0x606068);
   await ui.loop(() => (Input.pressed('a') || Input.pressed('b') ? true : undefined));
   l.destroy();
 }

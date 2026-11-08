@@ -105,3 +105,60 @@ html, body {
 .round.b { left: 0; bottom: 0; background: #7a2c3a !important; }
 .round.a.on { background: #d0566a !important; }
 .round.b.on { background: #a33a4a !important; }
+
+/* Online status, chat log and chat input sit over the top-left of the game. */
+#hud {
+  position: absolute;
+  top: calc(6px + env(safe-area-inset-top));
+  right: 8px;
+  font: 8px 'Press Start 2P', monospace;
+  color: #e8e8f0;
+  background: rgba(16, 16, 24, 0.6);
+  padding: 4px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 5;
+}
+#netdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; background: #888; vertical-align: 1px; }
+#hud.online #netdot { background: #58d080; }
+#hud.connecting #netdot { background: #f8c030; }
+#chatlog {
+  position: absolute;
+  left: 8px;
+  top: calc(26px + env(safe-area-inset-top));
+  max-width: min(60vw, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 5;
+}
+#chatlog div {
+  font: 8px/1.5 'Press Start 2P', monospace;
+  color: #f8f8f8;
+  background: rgba(16, 16, 24, 0.66);
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: opacity 0.6s;
+  overflow-wrap: anywhere;
+}
+#chatlog div b { color: #f8d070; font-weight: normal; }
+#chatlog div.sys { color: #a8c8f8; }
+#chatbar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(8px + env(safe-area-inset-top));
+  width: min(92vw, 520px);
+  z-index: 6;
+}
+#chatbar input {
+  width: 100%;
+  font: 12px 'Press Start 2P', monospace;
+  padding: 10px;
+  border: 3px solid #7088b8;
+  border-radius: 6px;
+  background: #f8f8f8;
+  color: #404048;
+  outline: none;
+}

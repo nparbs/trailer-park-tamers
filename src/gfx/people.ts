@@ -90,6 +90,16 @@ export function walkerFrames(l: WalkerLook): Pix[] {
   return out;
 }
 
+/** The six looks a player can pick. Index 0 matches the original hero. */
+export const OUTFIT_LOOKS: { name: string; look: WalkerLook }[] = [
+  { name: 'RED CAP', look: { skin: 0xf0c8a0, hair: 0x5c3c20, hat: 0xd03838, top: 0xf0f0f0, pants: 0x3c5c9c, shoes: 0xd03838 } },
+  { name: 'BLUE CAP', look: { skin: 0xa86c40, hair: 0x202020, hat: 0x3c64c8, top: 0x303038, pants: 0x6c6c78, shoes: 0xf0f0f0 } },
+  { name: 'BEANIE', look: { skin: 0xf0d0b0, hair: 0xc08040, hat: 0x3c8c4c, top: 0xb04040, pants: 0x3c4c6c } },
+  { name: 'PINK HAIR', look: { skin: 0xf0c8a0, hair: 0xf080b8, top: 0x7c4cb0, pants: 0x303038, shoes: 0xf0f0f0 } },
+  { name: 'MULLET', look: { skin: 0xe8b088, hair: 0xe8c860, top: 0x5c7cb0, pants: 0x3c5488, beard: 0xc8a850 } },
+  { name: 'HOODIE', look: { skin: 0x6c4428, hair: 0x202020, hat: 0xe08030, top: 0xe08030, pants: 0x404040 } },
+];
+
 /** Overworld sprite looks for the cast. */
 export const WALKERS: Record<string, WalkerLook> = {
   player: { skin: 0xf0c8a0, hair: 0x5c3c20, hat: 0xd03838, top: 0xf0f0f0, pants: 0x3c5c9c, shoes: 0xd03838 },

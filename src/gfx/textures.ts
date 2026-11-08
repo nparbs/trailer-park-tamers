@@ -2,7 +2,7 @@
 
 import Phaser from 'phaser';
 import { SPECIES, type Look, type SpeciesId } from '../data/species';
-import { WALKERS, walkerFrames, type WalkerLook } from './people';
+import { OUTFIT_LOOKS, WALKERS, walkerFrames, type WalkerLook } from './people';
 import { Pix, darken, lighten } from './pixels';
 import { drawDrifter } from './portrait';
 import { INDOOR, OUTDOOR, buildTileset } from './tiles';
@@ -155,7 +155,11 @@ export function buildTextures(scene: Phaser.Scene) {
   for (const [k, w] of Object.entries(WALKERS)) {
     scene.textures.addCanvas('tf_' + k, drawDrifter(lookFromWalker(w, k === 'tony'), false).toCanvas());
   }
-  scene.textures.addCanvas('tb_player', drawDrifter(lookFromWalker(WALKERS.player), true).toCanvas());
+  OUTFIT_LOOKS.forEach(({ look }, i) => {
+    addFrames(scene, 'w_out' + i, stripOf(walkerFrames(look)), 16, 16);
+    scene.textures.addCanvas('tf_out' + i, drawDrifter(lookFromWalker(look), false).toCanvas());
+    scene.textures.addCanvas('tb_out' + i, drawDrifter(lookFromWalker(look), true).toCanvas());
+  });
 
   for (const k of ['park', 'street', 'indoor'] as const) scene.textures.addCanvas('bg_' + k, battleBg(k));
   scene.textures.addCanvas('item', itemBall().toCanvas());

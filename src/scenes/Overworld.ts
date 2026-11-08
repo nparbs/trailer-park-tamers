@@ -4,7 +4,11 @@ import { item } from '../data/items';
 import { type SpeciesId } from '../data/species';
 import { makeDrifter, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
-import { G, addItem, healParty, save, type Dir } from '../game/state';
+import { G, addItem, healParty, type Dir } from '../game/state';
+import { net } from '../net/client';
+import { autosave, saveGame } from '../net/sync';
+import { OnlineLayer } from './online';
+import { isChatOpen } from '../ui/chat';
 import { INDOOR, OUTDOOR, tileIndex, type TileDef } from '../gfx/tiles';
 import { music, sfx } from '../audio/sound';
 import { UI, label, panel } from '../ui/ui';
@@ -45,6 +49,7 @@ export class Overworld extends Phaser.Scene {
   private turnLock = 0;
   private pendingWarp = false;
   private nameTag: Phaser.GameObjects.GameObject[] = [];
+  online!: OnlineLayer;
 
   constructor() {
     super('Overworld');
@@ -55,6 +60,8 @@ export class Overworld extends Phaser.Scene {
     this.npcs = [];
     this.busy = false;
     this.pendingWarp = false;
+    this.online = new OnlineLayer(this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.online.destroy());
     this.loadMap(G.map, G.x, G.y, G.facing);
     this.cameras.main.fadeIn(250, 0, 0, 0);
     this.events.on(Phaser.Scenes.Events.WAKE, () => Input.consume());
@@ -89,7 +96,7 @@ export class Overworld extends Phaser.Scene {
     cam.setBounds(-(bw - mw) / 2, -(bh - mh) / 2, bw, bh);
     cam.roundPixels = true;
 
-    this.player = this.makeWalker('player', 'w_player', x, y, facing);
+    this.player = this.makeWalker('player', 'w_out' + (G.outfit ?? 0), x, y, facing);
     cam.startFollow(this.player.spr, true, 1, 1, 0, 0);
     cam.setFollowOffset(-8, -6);
 
@@ -105,6 +112,7 @@ export class Overworld extends Phaser.Scene {
     }
     music(this.map.music);
     if (!this.map.indoor) this.showMapName();
+    this.online?.onMapLoaded();
   }
 
   private showMapName() {
@@ -222,11 +230,14 @@ export class Overworld extends Phaser.Scene {
 
   update(_t: number, dt: number) {
     G.playMs += dt;
+    this.online.tick();
+    if (isChatOpen()) return;
     if (this.ui.busy) {
       this.ui.update();
       return;
     }
     if (this.busy || this.player.moving || this.pendingWarp) return;
+    if (this.online.pump()) return;
 
     if (Input.pressed('start')) {
       this.run(() => this.startMenu());
@@ -242,6 +253,7 @@ export class Overworld extends Phaser.Scene {
       if (dir !== this.player.dir && Input.heldFor(dir) < 90 && this.time.now > this.turnLock) {
         this.setFacing(this.player, dir);
         G.facing = dir;
+        this.online.sendMove(this.player.x, this.player.y, dir);
         this.turnLock = this.time.now + 90;
         return;
       }
@@ -292,6 +304,7 @@ export class Overworld extends Phaser.Scene {
       return;
     }
     G.facing = dir;
+    this.online.sendMove(nx, ny, dir);
     const run = Input.held('b');
     void this.stepWalker(p, dir, run ? RUN_MS : WALK_MS).then(() => this.afterStep(dir));
   }
@@ -327,6 +340,7 @@ export class Overworld extends Phaser.Scene {
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.loadMap(w.to, Math.max(0, tx), Math.max(0, ty), w.face ?? dir);
       this.pendingWarp = false;
+      autosave();
       this.cameras.main.fadeIn(180, 0, 0, 0);
       Input.consume();
     });
@@ -347,11 +361,13 @@ export class Overworld extends Phaser.Scene {
   async run(fn: () => Promise<void> | void) {
     if (this.busy) return;
     this.busy = true;
+    this.online.setBusy(true);
     try {
       await fn();
     } finally {
       this.ui.close();
       this.busy = false;
+      this.online.setBusy(false);
       Input.consume();
     }
   }
@@ -363,6 +379,11 @@ export class Overworld extends Phaser.Scene {
     const [dx, dy] = DV[p.dir];
     let tx = p.x + dx;
     let ty = p.y + dy;
+    const other = this.online.playerAt(tx, ty);
+    if (other && !this.npcAt(tx, ty)) {
+      await this.online.playerMenu(other);
+      return;
+    }
     let n = this.npcAt(tx, ty);
     // Talk across counters.
     const t = this.tile(tx, ty);
@@ -504,6 +525,7 @@ export class Overworld extends Phaser.Scene {
               music(this.map.music);
               Input.consume();
               if (r === 'lose' && !data.noBlackout) await this.blackout();
+              if (!data.net) autosave();
               resolve(r);
             },
           } satisfies BattleData);
@@ -549,9 +571,9 @@ export class Overworld extends Phaser.Scene {
       else if (o === 'SAVE') {
         const yes = await this.ui.ask('Save your progress?');
         if (yes === 0) {
-          const ok = save();
+          const ok = saveGame();
           sfx('save');
-          await this.ui.say(ok ? `${G.name} saved the game.` : "Couldn't save. Is storage blocked in this browser?");
+          await this.ui.say(!ok ? "Couldn't save. Is storage blocked in this browser?" : net.isOnline ? `${G.name} saved the game to the server.` : `${G.name} saved the game in this browser.`);
         }
         this.ui.close();
         return;

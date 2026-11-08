@@ -6,6 +6,8 @@ export type Dir = 'up' | 'down' | 'left' | 'right';
 export interface GameState {
   version: 1;
   name: string;
+  /** Which player look (0-5) you picked. */
+  outfit: number;
   rival: string;
   map: string;
   x: number;
@@ -30,6 +32,7 @@ export function newGame(): GameState {
   return {
     version: 1,
     name: 'KID',
+    outfit: 0,
     rival: 'BOBBY RAY',
     map: 'home',
     x: 1,
@@ -76,13 +79,17 @@ export function load(): boolean {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return false;
-    const s = JSON.parse(raw) as GameState;
-    if (s.version !== 1) return false;
-    G = { ...newGame(), ...s };
-    return true;
+    return loadFrom(JSON.parse(raw));
   } catch {
     return false;
   }
+}
+
+/** Load a save that came from somewhere else (the server). */
+export function loadFrom(s: unknown): boolean {
+  if (!s || typeof s !== 'object' || (s as GameState).version !== 1) return false;
+  G = { ...newGame(), ...(s as GameState) };
+  return true;
 }
 
 export function addItem(id: ItemId, n = 1) {

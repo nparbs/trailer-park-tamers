@@ -10,6 +10,11 @@
   <body>
     <div id="app">
       <div id="game"></div>
+      <div id="hud" hidden><span id="netdot"></span><span id="nettext"></span></div>
+      <div id="chatlog" aria-live="polite"></div>
+      <form id="chatbar" autocomplete="off" hidden>
+        <input id="chatin" maxlength="90" placeholder="Say something..." enterkeyhint="send" />
+      </form>
       <div id="pad" aria-hidden="true">
         <div class="dpad">
           <button data-key="up" class="d up"></button>
@@ -19,7 +24,7 @@
           <span class="d hub"></span>
         </div>
         <div class="mid">
-          <button data-key="select" class="pill">SELECT</button>
+          <button data-act="chat" class="pill">CHAT</button>
           <button data-key="start" class="pill">START</button>
         </div>
         <div class="ab">

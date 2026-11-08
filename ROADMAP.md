@@ -28,7 +28,29 @@ Tone rule for all new content: cartoon satire. The joke is the premise and the c
 - [x] Chiptune music and sound effects from Web Audio
 - [x] Tests for battle rules, catch odds and every map
 
-## v0.2: The Bottoms
+## v0.2: Online ✅
+
+- [x] One Node server serves the page and a WebSocket world, hosted at tpt.parbs.online
+- [x] Accounts as 16-letter codes, cloud saves in SQLite, USE CODE to move to another device
+- [x] Autosave after fights and map changes, local backup, offline single-player still works
+- [x] See other players on the same map, with name tags and six outfits to pick from
+- [x] Per-map chat with speech bubbles and a chat log (T, /, or the CHAT button)
+- [x] Challenge another player: the server runs the fight with the same rules, healed copies, no exp
+- [x] Trade one crew member each, both confirm, server swaps and stores both saves
+- [x] Crews sent to the server are checked; rate limits per connection and per address
+- [x] Docker image joined to Scrap Riot's Cloudflare Tunnel network, with a locked deploy key
+
+## v0.2.x: Online follow-ups
+
+- [ ] Server-side progress checks (money, levels and items can currently be edited in a save)
+- [ ] Report and mute for chat, and a word filter toggle
+- [ ] Friends list and whispers across maps
+- [ ] Battle tower or ranked fights with a leaderboard
+- [ ] Show who's online on each map from the start menu
+- [ ] A spectator mode for fights
+- [ ] Block walking onto another player's tile (right now you can stand on top of each other)
+
+## v0.3: The Bottoms
 
 The taped-off road east of Grimsby opens up.
 
@@ -41,7 +63,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] A second save slot and an "are you sure" before overwriting
 - [ ] Move animations by type instead of one lunge for everything
 
-## v0.3: Polish pass
+## v0.4: Polish pass
 
 - [ ] Ledges you can hop down, and cut-through fences that need a "bolt cutters" field move
 - [ ] Overworld items hidden in trash piles (press A on them)
@@ -53,7 +75,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] Balance pass on early-game levels, prize money and catch rates
 - [ ] Playtest on a phone: button sizes, landscape overlap, audio unlock
 
-## v0.4: The rest of the map
+## v0.5: The rest of the map
 
 - [ ] Rail yard and freight trains (riding boxcars as fast travel)
 - [ ] The landfill (big encounter area, a Scrap-type boss)
@@ -63,7 +85,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] Field moves that open paths: shove a dumpster, climb a fence, talk past a bouncer
 - [ ] About 80 drifters total
 
-## v0.5: Endgame
+## v0.6: Endgame
 
 - [ ] City Hall: four council members and the mayor as the final gauntlet
 - [ ] Credits, then post-game rematches and a rare-drifter hunt
@@ -72,9 +94,7 @@ The taped-off road east of Grimsby opens up.
 
 ## Later
 
-- [ ] Link battles and trading between two phones over WebRTC
 - [ ] Install as an app (PWA), then wrap for Android
-- [ ] Hosting: Cloudflare Pages or a path on parbs.online
 - [ ] Controller support through the Gamepad API
 - [ ] Translations
 

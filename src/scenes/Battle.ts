@@ -13,6 +13,9 @@ import { darken } from '../gfx/pixels';
 import { TYPE_INFO } from '../data/types';
 import { UI, label, panel } from '../ui/ui';
 import { drawHpBar, pickFromParty, pickItem, showSummary } from '../ui/screens';
+import { net } from '../net/client';
+import type { BattleInbox, BattleUpdate } from '../net/inbox';
+import type { SideSnap } from '../net/protocol';
 
 export interface BattleData {
   enemy: Drifter[];
@@ -20,6 +23,8 @@ export interface BattleData {
   trainer?: TrainerDef;
   trainerLook?: string;
   noBlackout?: boolean;
+  /** A fight against another player, run by the server. */
+  net?: { inbox: BattleInbox; foeName: string; foeOutfit: number; myTeam: Drifter[] };
   bg: 'park' | 'street' | 'indoor';
   onEnd: (r: BattleResult) => void;
 }
@@ -52,6 +57,7 @@ export class BattleScene extends Phaser.Scene {
   private lastMove = 0;
   private leveled = new Set<number>();
   private lastThrow = 'SACK';
+  private trainerTex = 'tf_thug';
 
   constructor() {
     super('Battle');
@@ -69,9 +75,12 @@ export class BattleScene extends Phaser.Scene {
     this.ui = new UI(this);
     this.cameras.main.setBackgroundColor(0x000000);
     this.add.image(0, 0, 'bg_' + d.bg).setOrigin(0, 0);
-    this.b = new Battle({ player: G.party, enemy: d.enemy, wild: d.wild, trainerName: d.trainer?.name, bag: G.bag });
+    this.b = d.net
+      ? new Battle({ player: d.net.myTeam, enemy: d.enemy, wild: false, trainerName: d.net.foeName, pvp: { player: G.name, enemy: d.net.foeName } })
+      : new Battle({ player: G.party, enemy: d.enemy, wild: d.wild, trainerName: d.trainer?.name, bag: G.bag });
+    this.trainerTex = d.net ? 'tf_out' + d.net.foeOutfit : 'tf_' + (d.trainerLook ?? 'thug');
     this.enemySpr = this.add.image(EX, EY, 'pf_' + d.enemy[0].sp).setOrigin(0.5, 1).setDepth(5);
-    this.playerSpr = this.add.image(PX, PY, 'tb_player').setOrigin(0.5, 1).setDepth(6);
+    this.playerSpr = this.add.image(PX, PY, 'tb_out' + (G.outfit ?? 0)).setOrigin(0.5, 1).setDepth(6);
     this.boxes = { enemy: this.makeBox('enemy'), player: this.makeBox('player') };
     this.setBoxVisible('enemy', false);
     this.setBoxVisible('player', false);
@@ -207,13 +216,13 @@ export class BattleScene extends Phaser.Scene {
       await this.say(`A wild ${displayName(foe).toUpperCase()} jumped out!`);
     } else {
       const tr = d.trainer!;
-      this.enemySpr.setTexture('tf_' + (d.trainerLook ?? 'thug')).setX(-40);
+      this.enemySpr.setTexture(this.trainerTex).setX(-40);
       this.playerSpr.setX(300);
       await Promise.all([
         this.tween({ targets: this.enemySpr, x: EX, duration: 700, ease: 'Quad.out' }),
         this.tween({ targets: this.playerSpr, x: PX, duration: 700, ease: 'Quad.out' }),
       ]);
-      await this.say(`${tr.cls} ${tr.name} wants to fight!`);
+      await this.say(`${tr.cls} ${tr.name} wants to fight!`.trim());
       await this.tween({ targets: this.enemySpr, x: 300, duration: 400, ease: 'Quad.in' });
       await this.say(`${tr.name} sent out ${displayName(foe).toUpperCase()}!`);
       await this.sendOut('enemy', foe);
@@ -221,6 +230,11 @@ export class BattleScene extends Phaser.Scene {
     await this.tween({ targets: this.playerSpr, x: -60, duration: 400, ease: 'Quad.in' });
     await this.say(`Go! ${displayName(b.me).toUpperCase()}!`);
     await this.sendOut('player', b.me);
+
+    if (d.net) {
+      await this.netLoop(d.net.inbox, d.net.foeName);
+      return;
+    }
 
     // Turns.
     while (!b.over) {
@@ -234,6 +248,71 @@ export class BattleScene extends Phaser.Scene {
       await this.play(b.runTurn(action));
     }
     await this.finish(b.over);
+  }
+
+  /** Fights against another player: send choices to the server, play back what it says happened. */
+  private async netLoop(inbox: BattleInbox, foeName: string) {
+    let result: BattleResult = 'lose';
+    let waitingShown = false;
+    let answered = 0;
+    for (;;) {
+      const m: BattleUpdate = await inbox.next();
+      // A prompt we've already answered (it crossed with our reply): just wait.
+      if ((m.need === 'action' || m.need === 'switch') && m.seq <= answered) m.need = 'wait';
+      if (m.events.length) {
+        waitingShown = false;
+        this.ui.show('');
+        await this.play(m.events);
+      }
+      if (m.me.team.length) this.applySnap('player', m.me);
+      if (m.foe.team.length) this.applySnap('enemy', m.foe);
+      if (m.need === 'over') {
+        result = m.result ?? 'lose';
+        break;
+      }
+      if (m.need === 'wait') {
+        if (!waitingShown) this.ui.show(`Waiting for ${foeName}...`);
+        waitingShown = true;
+        continue;
+      }
+      if (m.need === 'switch') {
+        const idx = await this.pickReplacement();
+        answered = m.seq;
+        net.send({ t: 'b_action', action: { kind: 'switch', index: idx } });
+        this.ui.show(`Waiting for ${foeName}...`);
+        continue;
+      }
+      const action = await this.chooseAction();
+      answered = m.seq;
+      if (action.kind === 'run') net.send({ t: 'b_forfeit' });
+      else net.send({ t: 'b_action', action });
+      this.ui.show(`Waiting for ${foeName}...`);
+      waitingShown = true;
+    }
+    inbox.close();
+    this.b.over = result;
+    await this.finish(result);
+  }
+
+  private applySnap(side: Side, s: SideSnap) {
+    const team = side === 'player' ? this.b.player : this.b.enemy;
+    s.team.forEach((t, i) => {
+      const d = team[i];
+      if (!d) return;
+      d.hp = t.hp;
+      d.status = t.status;
+      t.pp.forEach((pp, k) => {
+        if (d.moves[k]) d.moves[k].pp = pp;
+      });
+    });
+    if (this.b.active[side] !== s.active) {
+      this.b.active[side] = s.active;
+      const d = team[s.active];
+      if (d && d.hp > 0) {
+        (side === 'enemy' ? this.enemySpr : this.playerSpr).setTexture((side === 'enemy' ? 'pf_' : 'pb_') + d.sp).setScale(1).setAlpha(1);
+        this.refreshBox(side, d);
+      }
+    }
   }
 
   private async sendOut(side: Side, d: Drifter) {
@@ -258,12 +337,20 @@ ${displayName(b.me).toUpperCase()}?`, 16);
         const m = await this.chooseMove();
         if (m >= 0) return { kind: 'move', slot: m };
       } else if (c === 1) {
+        if (this.data_.net) {
+          await this.say('No items in a street fight between players!');
+          continue;
+        }
         const a = await this.chooseItem();
         if (a) return a;
       } else if (c === 2) {
         const a = await this.chooseCrew();
         if (a) return a;
       } else if (c === 3) {
+        if (this.data_.net) {
+          const yes = await this.ui.ask('Give up this fight?');
+          if (yes !== 0) continue;
+        }
         return { kind: 'run' };
       }
     }
@@ -310,15 +397,15 @@ ${displayName(b.me).toUpperCase()}?`, 16);
     if (!id) return null;
     const def = item(id);
     if (def.kind === 'catch') {
-      if (G.party.length >= 6 && G.storage.length >= 60) {
+      if (this.b.player.length >= 6 && G.storage.length >= 60) {
         await this.say('Your storage unit is packed to the ceiling!');
         return null;
       }
       return { kind: 'item', item: id };
     }
-    const t = await pickFromParty(this, this.ui, { title: `Use ${def.name.toUpperCase()} on who?` });
+    const t = await pickFromParty(this, this.ui, { title: `Use ${def.name.toUpperCase()} on who?`, list: this.b.player });
     if (t < 0) return null;
-    const d = G.party[t];
+    const d = this.b.player[t];
     if (def.kind === 'revive' ? d.hp > 0 : d.hp <= 0 || (def.kind === 'heal' && d.hp >= maxHp(d)) || (def.kind === 'cure' && !d.status)) {
       await this.say("It won't have any effect.");
       return null;
@@ -328,20 +415,20 @@ ${displayName(b.me).toUpperCase()}?`, 16);
 
   private async chooseCrew(): Promise<Action | null> {
     for (;;) {
-      const i = await pickFromParty(this, this.ui, { title: 'Choose a crew member.' });
+      const i = await pickFromParty(this, this.ui, { title: 'Choose a crew member.', list: this.b.player });
       if (i < 0) return null;
       const c = await this.ui.choose(['SHIFT', 'INFO', 'CANCEL'], { cancel: true });
       if (c === 1) {
-        await showSummary(this, this.ui, G.party[i]);
+        await showSummary(this, this.ui, this.b.player[i]);
         continue;
       }
       if (c !== 0) continue;
       if (i === this.b.active.player) {
-        await this.say(`${displayName(G.party[i]).toUpperCase()} is already out there!`);
+        await this.say(`${displayName(this.b.player[i]).toUpperCase()} is already out there!`);
         continue;
       }
-      if (G.party[i].hp <= 0) {
-        await this.say(`${displayName(G.party[i]).toUpperCase()} is knocked out cold!`);
+      if (this.b.player[i].hp <= 0) {
+        await this.say(`${displayName(this.b.player[i]).toUpperCase()} is knocked out cold!`);
         continue;
       }
       return { kind: 'switch', index: i };
@@ -350,8 +437,8 @@ ${displayName(b.me).toUpperCase()}?`, 16);
 
   private async pickReplacement(): Promise<number> {
     for (;;) {
-      const i = await pickFromParty(this, this.ui, { title: 'Send out who?', cancel: false, disabled: (d) => d.hp <= 0 });
-      if (i >= 0 && G.party[i].hp > 0) return i;
+      const i = await pickFromParty(this, this.ui, { title: 'Send out who?', cancel: false, disabled: (d) => d.hp <= 0, list: this.b.player, initial: this.b.player.findIndex((d) => d.hp > 0) });
+      if (i >= 0 && this.b.player[i].hp > 0) return i;
       sfx('bump');
     }
   }
@@ -371,9 +458,11 @@ ${displayName(b.me).toUpperCase()}?`, 16);
           await this.animHit(e.side, e.eff);
           break;
         case 'hp':
+          this.b.mon(e.side).hp = e.hp;
           await this.tweenHp(e.side, e.hp, e.max);
           break;
         case 'status':
+          this.b.mon(e.side).status = e.status;
           this.setStatus(e.side, e.status);
           break;
         case 'stat': {
@@ -396,14 +485,15 @@ ${displayName(b.me).toUpperCase()}?`, 16);
           await this.animThrow(e.shakes, e.caught);
           break;
         case 'send': {
+          this.b.active[e.side] = e.index;
           const d = e.side === 'enemy' ? this.b.enemy[e.index] : this.b.player[e.index];
           if (e.side === 'enemy') markSeen(d.sp);
           await this.sendOut(e.side, d);
           break;
         }
         case 'recall':
-          await this.tween({ targets: this.playerSpr, scale: 0, duration: 220 });
-          this.setBoxVisible('player', false);
+          await this.tween({ targets: e.side === 'enemy' ? this.enemySpr : this.playerSpr, scale: 0, duration: 220 });
+          this.setBoxVisible(e.side, false);
           break;
         case 'exp':
           await this.giveExp(e.index, e.amount);
@@ -525,9 +615,18 @@ ${displayName(b.me).toUpperCase()}?`, 16);
 
   private async finish(result: BattleResult) {
     const d = this.data_;
-    if (result === 'win' && d.trainer) {
+    if (d.net) {
+      if (result === 'win') {
+        music('victory');
+        this.enemySpr.setTexture(this.trainerTex).setAlpha(1).setScale(1).setPosition(300, EY);
+        await this.tween({ targets: this.enemySpr, x: EX, duration: 500, ease: 'Quad.out' });
+        await this.say(`You beat ${d.net.foeName}!`, 0);
+      } else {
+        await this.say(`${d.net.foeName} won the fight.`, 0);
+      }
+    } else if (result === 'win' && d.trainer) {
       const tr = d.trainer;
-      this.enemySpr.setTexture('tf_' + (d.trainerLook ?? 'thug')).setAlpha(1).setScale(1).setPosition(300, EY);
+      this.enemySpr.setTexture(this.trainerTex).setAlpha(1).setScale(1).setPosition(300, EY);
       await this.tween({ targets: this.enemySpr, x: EX, duration: 500, ease: 'Quad.out' });
       await this.say(`${tr.name}: ${tr.lose}`, 0);
       const money = tr.reward;
@@ -549,7 +648,7 @@ ${displayName(b.me).toUpperCase()}?`, 16);
     if (result === 'lose' && d.noBlackout) {
       await this.say(`${G.name} lost to ${d.trainer?.name ?? 'them'}...`, 0);
     }
-    if (result === 'win' || result === 'caught') await this.evolutions();
+    if (!d.net && (result === 'win' || result === 'caught')) await this.evolutions();
 
     // Stat stages and the field don't carry over; statuses do.
     this.ui.close();

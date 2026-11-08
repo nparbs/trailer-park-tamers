@@ -108,6 +108,7 @@ export const Input = new InputState();
 
 export function installInput() {
   window.addEventListener('keydown', (e) => {
+    if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
     const k = KEYMAP[e.code];
     if (!k) return;
     e.preventDefault();

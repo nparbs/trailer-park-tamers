@@ -42,6 +42,8 @@ export interface BattleOptions {
   rng?: Rng;
   /** Items the player is carrying, consumed by item actions. */
   bag?: Partial<Record<ItemId, number>>;
+  /** Player-vs-player: both sides choose actions, nobody earns exp, and text names both owners. */
+  pvp?: { player: string; enemy: string };
 }
 
 const STRUGGLE: MoveDef = { name: 'Flail', type: 'STREET', power: 50, acc: 0, pp: 1, recoil: 0.25 };
@@ -61,7 +63,10 @@ export class Battle {
   over: BattleResult | null = null;
   /** Set when your active drifter fainted and you must pick a replacement. */
   needSwitch = false;
+  /** PvP only: the other side's active drifter fainted and they must pick a replacement. */
+  needSwitchEnemy = false;
   caught: Drifter | null = null;
+  readonly pvp: { player: string; enemy: string } | null;
 
   constructor(o: BattleOptions) {
     this.player = o.player;
@@ -70,6 +75,8 @@ export class Battle {
     this.trainerName = o.trainerName ?? '';
     this.rng = o.rng ?? Math.random;
     this.bag = o.bag ?? {};
+    this.pvp = o.pvp ?? null;
+    this.active.enemy = Math.max(0, this.enemy.findIndex((d) => d.hp > 0));
     this.active.player = Math.max(0, this.player.findIndex((d) => d.hp > 0));
     this.participants.add(this.active.player);
   }
@@ -85,6 +92,7 @@ export class Battle {
   }
   label(side: Side) {
     const n = displayName(this.mon(side));
+    if (this.pvp) return `${this.pvp[side]}'s ${n}`;
     if (side === 'player') return n;
     return this.wild ? `The wild ${n}` : `${this.trainerName}'s ${n}`;
   }
@@ -158,10 +166,42 @@ export class Battle {
   }
 
   /** Called after needSwitch, with the crew member you picked. */
-  forceSwitch(index: number): BattleEvent[] {
+  forceSwitch(index: number, side: Side = 'player'): BattleEvent[] {
     const ev: BattleEvent[] = [];
-    this.needSwitch = false;
-    this.switchIn(index, ev, false);
+    if (side === 'player') this.needSwitch = false;
+    else this.needSwitchEnemy = false;
+    this.switchIn(index, ev, false, side);
+    return ev;
+  }
+
+  /** Is this a legal action for a side in a PvP turn? */
+  validPvp(side: Side, a: Action): boolean {
+    const team = side === 'player' ? this.player : this.enemy;
+    if (a.kind === 'move') return Number.isInteger(a.slot) && a.slot >= -1 && a.slot < this.mon(side).moves.length;
+    if (a.kind === 'switch') return Number.isInteger(a.index) && a.index !== this.active[side] && (team[a.index]?.hp ?? 0) > 0;
+    return false;
+  }
+
+  /** One PvP turn: switches happen first, then moves in priority and speed order. */
+  runTurnPvp(a: Action, b: Action): BattleEvent[] {
+    const ev: BattleEvent[] = [];
+    if (this.over || this.needSwitch || this.needSwitchEnemy) return ev;
+    const acts: [Side, Action][] = [['player', a], ['enemy', b]];
+    for (const [side, act] of acts) if (act.kind === 'switch') this.switchIn(act.index, ev, true, side);
+    const movers = acts.filter(([, act]) => act.kind === 'move') as [Side, { kind: 'move'; slot: number }][];
+    if (movers.length === 2) {
+      const pri = (s: Side, slot: number) => this.moveFor(s, slot).priority ?? 0;
+      const [pa, pb] = [pri('player', movers[0][1].slot), pri('enemy', movers[1][1].slot)];
+      const sa = this.stat('player', 'spd');
+      const sb = this.stat('enemy', 'spd');
+      if (pb > pa || (pb === pa && (sb > sa || (sa === sb && this.rng() < 0.5)))) movers.reverse();
+    }
+    for (const [side, act] of movers) {
+      if (this.mon(side).hp <= 0 || this.mon(other(side)).hp <= 0) break;
+      this.useMove(side, act.slot, ev);
+      if (this.checkFaints(ev)) return ev;
+    }
+    this.endOfTurn(ev);
     return ev;
   }
 
@@ -374,28 +414,40 @@ export class Battle {
       stop = true;
       ev.push({ t: 'faint', side: 'enemy' });
       ev.push({ t: 'msg', text: `${this.label('enemy')} got knocked out!` });
-      this.awardExp(ev);
-      const next = this.enemy.findIndex((d) => d.hp > 0);
-      if (next < 0) {
+      if (this.pvp) {
+        if (this.enemy.some((d) => d.hp > 0)) this.needSwitchEnemy = true;
+        else {
+          ev.push({ t: 'msg', text: `${this.pvp.enemy} has no crew left standing!` });
+          this.finish(ev, 'win');
+          return true;
+        }
+      }
+      if (!this.pvp) this.awardExp(ev);
+      const next = this.pvp ? -2 : this.enemy.findIndex((d) => d.hp > 0);
+      if (next === -2) {
+        // PvP: the other player picks their replacement.
+      } else if (next < 0) {
         if (!this.wild) ev.push({ t: 'msg', text: `You beat ${this.trainerName}!` });
         this.finish(ev, 'win');
         return true;
+      } else {
+        this.active.enemy = next;
+        this.stages.enemy = freshStages();
+        this.participants = new Set([this.active.player]);
+        ev.push({ t: 'msg', text: `${this.trainerName} sent out ${displayName(this.foe)}!` });
+        ev.push({ t: 'send', side: 'enemy', index: next });
       }
-      this.active.enemy = next;
-      this.stages.enemy = freshStages();
-      this.participants = new Set([this.active.player]);
-      ev.push({ t: 'msg', text: `${this.trainerName} sent out ${displayName(this.foe)}!` });
-      ev.push({ t: 'send', side: 'enemy', index: next });
     }
     if (this.me.hp <= 0) {
       stop = true;
       ev.push({ t: 'faint', side: 'player' });
-      ev.push({ t: 'msg', text: `${displayName(this.me)} got knocked out!` });
+      ev.push({ t: 'msg', text: `${this.pvp ? this.label('player') : displayName(this.me)} got knocked out!` });
       this.participants.delete(this.active.player);
       if (this.player.some((d) => d.hp > 0)) this.needSwitch = true;
       else {
-        ev.push({ t: 'msg', text: 'Your whole crew is down!' });
-        this.finish(ev, 'lose');
+        ev.push({ t: 'msg', text: this.pvp ? `${this.pvp.player} has no crew left standing!` : 'Your whole crew is down!' });
+        this.needSwitchEnemy = false;
+        if (!this.over) this.finish(ev, 'lose');
       }
     }
     return stop;
@@ -410,16 +462,19 @@ export class Battle {
     for (const i of alive) ev.push({ t: 'exp', index: i, amount: each });
   }
 
-  private switchIn(index: number, ev: BattleEvent[], voluntary: boolean) {
+  private switchIn(index: number, ev: BattleEvent[], voluntary: boolean, side: Side = 'player') {
+    const owner = this.pvp?.[side];
     if (voluntary) {
-      ev.push({ t: 'msg', text: `Get back here, ${displayName(this.me)}!` });
-      ev.push({ t: 'recall', side: 'player' });
+      const name = displayName(this.mon(side));
+      ev.push({ t: 'msg', text: owner ? `${owner} called back ${name}!` : `Get back here, ${name}!` });
+      ev.push({ t: 'recall', side });
     }
-    this.active.player = index;
-    this.stages.player = freshStages();
-    this.participants.add(index);
-    ev.push({ t: 'msg', text: `Go! ${displayName(this.me)}!` });
-    ev.push({ t: 'send', side: 'player', index });
+    this.active[side] = index;
+    this.stages[side] = freshStages();
+    if (side === 'player') this.participants.add(index);
+    const name = displayName(this.mon(side));
+    ev.push({ t: 'msg', text: owner ? `${owner} sent out ${name}!` : `Go! ${name}!` });
+    ev.push({ t: 'send', side, index });
   }
 
   private useItem(id: ItemId, target: number | undefined, ev: BattleEvent[]): boolean {

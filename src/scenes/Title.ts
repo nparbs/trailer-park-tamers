@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { FONT } from '../gfx/font';
 import { Input } from '../game/input';
-import { G, hasSave, load, newGame, setState } from '../game/state';
+import { G, hasSave, load, loadFrom, newGame, setState } from '../game/state';
+import { net } from '../net/client';
+import { OUTFIT_LOOKS } from '../gfx/people';
 import { isMuted, music, sfx, toggleMute } from '../audio/sound';
 import { UI } from '../ui/ui';
 
@@ -45,7 +47,7 @@ export class Title extends Phaser.Scene {
     for (const t of [t1, t2]) if ((t as any).setDropShadow) t.setDropShadow(2, 2, 0x201828, 1);
     const press = this.add.bitmapText(120, 92, FONT, 'PRESS START', 8).setOrigin(0.5, 0).setTint(0xf8f8f8);
     this.tweens.add({ targets: press, alpha: 0.1, duration: 500, yoyo: true, repeat: -1 });
-    this.add.bitmapText(2, 2, FONT, 'v0.1', 8).setTint(0x806878);
+    this.add.bitmapText(2, 2, FONT, 'v0.2', 8).setTint(0x806878);
 
     music('title');
     this.time.delayedCall(400, () => (this.ready = true));
@@ -69,10 +71,20 @@ export class Title extends Phaser.Scene {
   }
 
   private async menu() {
+    if (!net.isOnline) {
+      this.ui.show('Connecting to the server...');
+      await net.connect();
+      this.ui.close();
+    }
     for (;;) {
-      const opts = hasSave() ? ['CONTINUE', 'NEW GAME', 'SOUND'] : ['NEW GAME', 'SOUND'];
-      const i = await this.ui.choose(opts, { x: 80, y: 96, w: 92 });
+      const cloud = net.isOnline && net.serverSave ? net.serverSave : null;
+      const opts = cloud || hasSave() ? ['CONTINUE', 'NEW GAME', 'USE CODE', 'SOUND'] : ['NEW GAME', 'USE CODE', 'SOUND'];
+      const i = await this.ui.choose(opts, { x: 76, y: 88, w: 96 });
       const o = opts[i];
+      if (o === 'USE CODE') {
+        await this.useCode();
+        continue;
+      }
       if (o === 'SOUND') {
         const m = toggleMute();
         await this.ui.say(m ? 'Sound is OFF.' : 'Sound is ON.');
@@ -80,12 +92,12 @@ export class Title extends Phaser.Scene {
         continue;
       }
       if (o === 'CONTINUE') {
-        if (load()) return this.go();
+        if (cloud ? loadFrom(cloud) : load()) return this.go();
         await this.ui.say("That save file is busted. Starting fresh might be your only hope.");
         this.ui.close();
         continue;
       }
-      if (hasSave()) {
+      if (cloud || hasSave()) {
         const sure = await this.ui.ask('Start over? Your old save gets wiped when you next save.');
         this.ui.close();
         if (sure !== 0) continue;
@@ -120,6 +132,18 @@ export class Title extends Phaser.Scene {
       name = typed.replace(/[^A-Za-z0-9 .'-]/g, '').trim().toUpperCase().slice(0, 8) || 'KID';
     }
     G.name = name;
+    await ui.say('And what do you look like these days?', 1);
+    const card = this.add.graphics().setDepth(902);
+    card.fillStyle(0xf8f8f8).fillRoundedRect(24, 14, 76, 80, 6);
+    card.lineStyle(2, 0x283048).strokeRoundedRect(24, 14, 76, 80, 6);
+    const pic = this.add.image(62, 90, 'tf_out0').setOrigin(0.5, 1).setDepth(903);
+    dale.setVisible(false);
+    const o = await ui.choose(OUTFIT_LOOKS.map((x) => x.name), { x: 140, y: 4, w: 98, onMove: (k) => pic.setTexture('tf_out' + k) });
+    G.outfit = Math.max(0, o);
+    card.destroy();
+    pic.destroy();
+    dale.setVisible(true);
+    net.send({ t: 'profile', name: G.name, outfit: G.outfit });
     await ui.talk(
       `${G.name}! That's right. Your cousin BOBBY RAY'll be around too. He's... a lot.`,
       'Now get up, get dressed, and come see me. Your future in the people business starts today!',
@@ -128,7 +152,33 @@ export class Title extends Phaser.Scene {
     await new Promise<void>((r) => this.tweens.add({ targets: [dale], alpha: 0, duration: 400, onComplete: () => r() }));
   }
 
+  private async useCode() {
+    const ui = this.ui;
+    if (net.isOnline) await ui.say(`Your code is ${net.prettyCode}. Enter it on another device to play as you there.`);
+    const yes = await ui.ask('Log in with a code from another device?');
+    ui.close();
+    if (yes !== 0) return;
+    Input.releaseAll();
+    const code = window.prompt('Enter your 16-letter code:', '') ?? '';
+    if (code.replace(/[^A-Za-z0-9]/g, '').length !== 16) {
+      await ui.say("That doesn't look like a code.");
+      ui.close();
+      return;
+    }
+    ui.show('Logging in...');
+    const ok = await net.useCode(code);
+    if (!ok) {
+      await ui.say(net.refusedReason || "Couldn't reach the server.");
+      net.refusedReason = '';
+      await net.connect();
+    } else {
+      await ui.say(net.serverSave ? `Welcome back, ${net.name}!` : `Logged in as ${net.name}. No save there yet.`);
+    }
+    ui.close();
+  }
+
   private go() {
+    if (net.isOnline) net.send({ t: 'profile', name: G.name, outfit: G.outfit ?? 0 });
     this.cameras.main.fadeOut(400, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.start('Overworld');
