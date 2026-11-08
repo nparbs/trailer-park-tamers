@@ -25,8 +25,10 @@ Hosting on the Debian VM is in [docs/hosting.md](docs/hosting.md).
 | Move | Arrows / WASD | D-pad |
 | A (talk, confirm) | Z, Space, J | A |
 | B (back, hold to run) | X, Esc, K | B |
-| Start (menu) | Enter, P | START |
+| Start (menu) | Enter, P, Esc | START |
 | Chat | T or / | CHAT |
+| Music on/off | M, or the note button top left | Note button |
+| Who's online | Click the online counter | Tap the online counter |
 
 The on-screen pad only appears on touch screens. In portrait it sits under the game like a handheld; in landscape it floats over the sides.
 

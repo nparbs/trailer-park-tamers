@@ -47,15 +47,20 @@ class Layer {
   }
 }
 
+/** Green while healthy, orange when low, red when nearly out. */
+export const HP_LOW = 0.4;
+export const HP_CRIT = 0.15;
+
 export function hpColor(frac: number) {
-  return frac > 0.5 ? 0x58d080 : frac > 0.2 ? 0xf8c030 : 0xf05048;
+  return frac > HP_LOW ? 0x58d080 : frac > HP_CRIT ? 0xf88830 : 0xf03838;
 }
 
+/** An HP bar w + 18 pixels wide (the same footprint the old labelled bar used). */
 export function drawHpBar(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, frac: number) {
+  const inner = w + 16;
   g.fillStyle(0x404048).fillRect(x, y, w + 18, 5);
-  g.fillStyle(0xf8b040).fillRect(x + 1, y + 1, 14, 3);
-  g.fillStyle(0x303030).fillRect(x + 16, y + 1, w, 3);
-  g.fillStyle(hpColor(frac)).fillRect(x + 16, y + 1, Math.max(0, Math.round(w * frac)), 3);
+  g.fillStyle(0x303030).fillRect(x + 1, y + 1, inner, 3);
+  g.fillStyle(hpColor(frac)).fillRect(x + 1, y + 1, frac > 0 ? Math.max(1, Math.round(inner * Math.min(1, frac))) : 0, 3);
 }
 
 function typeTag(l: Layer, x: number, y: number, t: TypeId) {

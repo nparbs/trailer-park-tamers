@@ -7,12 +7,12 @@ import { Battle, type Action, type BattleEvent, type BattleResult, type Side } f
 import { addExp, canEvolve, displayName, evolve, expForLevel, learnMove, maxHp, replaceMove, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
 import { G, markSeen, recruit } from '../game/state';
-import { music, sfx } from '../audio/sound';
+import { moan, music, sfx } from '../audio/sound';
 import { FONT } from '../gfx/font';
 import { darken } from '../gfx/pixels';
 import { TYPE_INFO } from '../data/types';
 import { UI, label, panel } from '../ui/ui';
-import { drawHpBar, pickFromParty, pickItem, showSummary } from '../ui/screens';
+import { drawHpBar, HP_CRIT, HP_LOW, pickFromParty, pickItem, showSummary } from '../ui/screens';
 import { net } from '../net/client';
 import type { BattleInbox, BattleUpdate } from '../net/inbox';
 import type { SideSnap } from '../net/protocol';
@@ -168,6 +168,7 @@ export class BattleScene extends Phaser.Scene {
     box.max = max;
     const from = box.shownHp;
     if (from === to) return Promise.resolve();
+    this.hurtSound(side, from / max, to / max);
     const dur = Math.min(900, 200 + Math.abs(from - to) * 25);
     return new Promise<void>((resolve) => {
       this.tweens.addCounter({
@@ -185,6 +186,15 @@ export class BattleScene extends Phaser.Scene {
         },
       });
     });
+  }
+
+  /** Moan when a fighter drops into the orange, and again (worse) into the red. */
+  private hurtSound(side: Side, before: number, after: number, sentOut = false, sp: string = this.b.mon(side).sp) {
+    if (after <= 0 || (!sentOut && after >= before)) return;
+    const seed = [...sp].reduce((a, ch) => a + ch.charCodeAt(0), 0);
+    const delay = sentOut ? 120 : 380;
+    if (after <= HP_CRIT && (sentOut || before > HP_CRIT)) this.time.delayedCall(delay, () => moan('crit', seed));
+    else if (after <= HP_LOW && (sentOut || before > HP_LOW)) this.time.delayedCall(delay, () => moan('low', seed));
   }
 
   private tween(cfg: Phaser.Types.Tweens.TweenBuilderConfig) {
@@ -324,6 +334,8 @@ export class BattleScene extends Phaser.Scene {
     spr.clearTint();
     this.refreshBox(side, d);
     this.setBoxVisible(side, true);
+    const f = d.hp / maxHp(d);
+    this.hurtSound(side, f, f, true, d.sp);
   }
 
   private async chooseAction(): Promise<Action> {

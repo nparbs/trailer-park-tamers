@@ -118,17 +118,20 @@ html, body {
   color: #e8e8f0;
   background: rgba(16, 16, 24, 0.6);
   padding: 4px 6px;
+  border: none;
   border-radius: 4px;
-  pointer-events: none;
+  cursor: pointer;
   z-index: 5;
 }
+#hud:hover, #hud.open { background: rgba(40, 40, 64, 0.85); }
+#hud[hidden] { display: none; }
 #netdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; background: #888; vertical-align: 1px; }
 #hud.online #netdot { background: #58d080; }
 #hud.connecting #netdot { background: #f8c030; }
 #chatlog {
   position: absolute;
   left: 8px;
-  top: calc(26px + env(safe-area-inset-top));
+  top: calc(28px + env(safe-area-inset-top));
   max-width: min(60vw, 420px);
   display: flex;
   flex-direction: column;
@@ -164,4 +167,61 @@ html, body {
   background: #f8f8f8;
   color: #404048;
   outline: none;
+}
+
+/* Music toggle, top left. Drawn as a pixel note; a red slash when the music is off. */
+#musicbtn {
+  position: absolute;
+  top: calc(4px + env(safe-area-inset-top));
+  left: calc(6px + env(safe-area-inset-left));
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(16, 16, 24, 0.6);
+  cursor: pointer;
+  z-index: 7;
+}
+#musicbtn svg { display: block; margin: auto; }
+#musicbtn .note { fill: #e8e8f0; }
+#musicbtn .slash { stroke: #f05048; stroke-width: 1.6; stroke-linecap: round; display: none; }
+#musicbtn .note { shape-rendering: crispEdges; }
+#musicbtn.off .note { fill: #8888a0; }
+#musicbtn.off .slash { display: inline; }
+#musicbtn:hover { background: rgba(40, 40, 64, 0.85); }
+
+/* Who's online, opened from the online counter. */
+#who {
+  position: absolute;
+  top: calc(28px + env(safe-area-inset-top));
+  right: 8px;
+  width: min(86vw, 340px);
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  font: 8px/1.6 'Press Start 2P', monospace;
+  color: #f8f8f8;
+  background: rgba(16, 16, 28, 0.92);
+  border: 2px solid #7088b8;
+  border-radius: 6px;
+  z-index: 8;
+}
+#who[hidden] { display: none; }
+.whohead { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-bottom: 1px solid #3c4870; color: #f8d070; }
+#whoclose { font: inherit; color: #e8e8f0; background: none; border: none; cursor: pointer; padding: 2px 4px; }
+#wholist { list-style: none; margin: 0; padding: 4px 0; overflow-y: auto; }
+#wholist li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 8px; }
+#wholist li.me .n { color: #a8e8b8; }
+#wholist .m { color: #a8c8f8; text-align: right; }
+#wholist .busy { color: #f8a070; }
+#wholist li.empty { color: #a0a0b0; justify-content: center; }
+
+/* Phones held upright: the overlays live in the space under the game. This sits last
+   so it wins over the base rules above (same specificity, later rule wins). */
+@media (pointer: coarse) and (orientation: portrait) {
+  #hud { top: calc(100vw * 2 / 3 + 8px + env(safe-area-inset-top)); }
+  #musicbtn { top: calc(100vw * 2 / 3 + 6px + env(safe-area-inset-top)); }
+  #chatlog { top: calc(100vw * 2 / 3 + 30px + env(safe-area-inset-top)); }
+  #who { top: calc(100vw * 2 / 3 + 30px + env(safe-area-inset-top)); }
 }

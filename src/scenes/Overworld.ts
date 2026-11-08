@@ -249,7 +249,7 @@ export class Overworld extends Phaser.Scene {
     if (this.busy || this.player.moving || this.pendingWarp) return;
     if (this.online.pump()) return;
 
-    if (Input.pressed('start')) {
+    if (Input.pressed('start') || Input.escPressed()) {
       void this.run(() => this.startMenu()).then(() => {
         if (!this.quitToTitle) return;
         this.quitToTitle = false;

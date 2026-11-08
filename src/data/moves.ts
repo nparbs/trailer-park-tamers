@@ -111,6 +111,16 @@ export const MOVES = {
   BONE_SMASH: { name: 'Bone Smash', type: 'PSYCHO', power: 120, acc: 85, pp: 5, recoil: 0.33 },
   SAWZALL: { name: 'Sawzall', type: 'SCRAP', power: 80, acc: 95, pp: 15, highCrit: true },
   RE_UP: { name: 'Re-Up', type: 'SLICK', power: 0, acc: 0, pp: 10, heal: 0.5 },
+
+  // Taught by tutors (src/data/tutors.ts), not learned by levelling.
+  BONG_CLEAR: { name: 'Bong Clear', type: 'CHEM', power: 70, acc: 95, pp: 15, inflict: { status: 'out', chance: 20 }, text: 'Cleared the whole bowl and coughed it in their face.' },
+  COUCH_LOCK: { name: 'Couch Lock', type: 'CHEM', power: 0, acc: 90, pp: 20, stat: { who: 'foe', stat: 'spd', stages: -2 }, text: "They sank into the cushions. They live there now." },
+  SMOKE_METH: { name: 'Smoke Meth', type: 'CHEM', power: 80, acc: 90, pp: 10, stat: { who: 'self', stat: 'spd', stages: 1 }, text: 'Eyes like dinner plates. Not sleeping till Thursday.' },
+  SHOTGUN_BEER: { name: 'Shotgun a Beer', type: 'BOOZE', power: 40, acc: 100, pp: 30, priority: 1, text: 'Cracked it, chugged it, threw the can.' },
+  KEG_STAND: { name: 'Keg Stand', type: 'BOOZE', power: 0, acc: 0, pp: 10, heal: 0.5, text: 'Upside down and chugging. The crowd went wild.' },
+  SMASH_GRAB: { name: 'Smash & Grab', type: 'SLICK', power: 80, acc: 90, pp: 10 },
+  FIVE_FINGER: { name: 'Five-Finger Discount', type: 'SLICK', power: 50, acc: 100, pp: 20, drain: 0.5, text: 'Helped themselves to a little something.' },
+  SNITCH: { name: 'Snitch', type: 'SLICK', power: 0, acc: 85, pp: 10, stat: { who: 'foe', stat: 'acc', stages: -2 }, text: '"Officer, it was HIM!"' },
 } satisfies Record<string, MoveDef>;
 
 export type MoveId = keyof typeof MOVES;

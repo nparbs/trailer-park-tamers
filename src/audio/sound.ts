@@ -5,9 +5,12 @@ let master: GainNode | null = null;
 let musicBus: GainNode | null = null;
 let sfxBus: GainNode | null = null;
 let muted = false;
+let musicOff = false;
+const MUSIC_VOL = 0.32;
 
 try {
   muted = localStorage.getItem('tpt-muted') === '1';
+  musicOff = localStorage.getItem('tpt-music-off') === '1';
 } catch {
   /* storage blocked */
 }
@@ -21,7 +24,7 @@ function ac() {
     master.gain.value = muted ? 0 : 0.5;
     master.connect(ctx.destination);
     musicBus = ctx.createGain();
-    musicBus.gain.value = 0.32;
+    musicBus.gain.value = musicOff ? 0 : MUSIC_VOL;
     musicBus.connect(master);
     sfxBus = ctx.createGain();
     sfxBus.gain.value = 0.5;
@@ -49,6 +52,22 @@ export function toggleMute() {
 
 export function isMuted() {
   return muted;
+}
+
+/** Music only: sound effects keep playing. Remembered in this browser. */
+export function toggleMusic() {
+  musicOff = !musicOff;
+  try {
+    localStorage.setItem('tpt-music-off', musicOff ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+  if (musicBus && ctx) musicBus.gain.setTargetAtTime(musicOff ? 0 : MUSIC_VOL, ctx.currentTime, 0.05);
+  return musicOff;
+}
+
+export function isMusicOff() {
+  return musicOff;
 }
 
 function tone(freq: number, start: number, dur: number, type: OscillatorType, vol: number, bus: GainNode, slideTo?: number) {
@@ -129,6 +148,64 @@ export function sfx(name: Sfx) {
     case 'save': ['E5', 'G5', 'C6'].forEach((n, i) => tone(freqOf(n), t + i * 0.1, 0.12, 'triangle', 0.3, b)); break;
     case 'buy': tone(1800, t, 0.05, 'square', 0.1, b); tone(2400, t + 0.06, 0.12, 'square', 0.1, b); break;
   }
+}
+
+/**
+ * A hurt moan for a drifter that's running low: a buzzy voice pushed through two
+ * vowel filters ("uhhh" sliding toward "ohhh"). 'crit' is lower, longer and wheezier.
+ * seed picks the voice so each drifter always sounds like the same guy.
+ */
+export function moan(level: 'low' | 'crit', seed = 0) {
+  const c = ac();
+  if (!c || !sfxBus) return;
+  const t = c.currentTime + 0.01;
+  const crit = level === 'crit';
+  const base = 95 + (Math.abs(seed) % 7) * 12; // 95..167 Hz
+  const f0 = crit ? base * 0.85 : base;
+  const dur = crit ? 1.0 : 0.7;
+  const out = c.createGain();
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime(crit ? 0.5 : 0.45, t + 0.08);
+  out.gain.setValueAtTime(crit ? 0.5 : 0.45, t + dur * 0.55);
+  out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  out.connect(sfxBus);
+
+  // Voice source: two slightly detuned saws, wobbling and sagging in pitch.
+  const src = c.createGain();
+  src.gain.value = 0.5;
+  const lfo = c.createOscillator();
+  const lfoAmt = c.createGain();
+  lfo.frequency.value = crit ? 7 : 5.5;
+  lfoAmt.gain.value = f0 * 0.04;
+  lfo.connect(lfoAmt);
+  for (const detune of [-8, 8]) {
+    const o = c.createOscillator();
+    o.type = 'sawtooth';
+    o.detune.value = detune;
+    o.frequency.setValueAtTime(f0 * 1.12, t);
+    o.frequency.linearRampToValueAtTime(f0, t + 0.15);
+    o.frequency.exponentialRampToValueAtTime(f0 * (crit ? 0.6 : 0.75), t + dur);
+    lfoAmt.connect(o.frequency);
+    o.connect(src);
+    o.start(t);
+    o.stop(t + dur);
+  }
+  lfo.start(t);
+  lfo.stop(t + dur);
+
+  // Two formants, gliding from "uh" toward "oh".
+  for (const [a, b, q, g] of [[640, 480, 6, 1], [1150, 820, 8, 0.6]] as const) {
+    const f = c.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = q;
+    f.frequency.setValueAtTime(a, t);
+    f.frequency.linearRampToValueAtTime(b, t + dur * 0.8);
+    const fg = c.createGain();
+    fg.gain.value = g;
+    src.connect(f).connect(fg).connect(out);
+  }
+  // Breath, louder when they're nearly out.
+  noise(t, dur * 0.9, crit ? 0.12 : 0.05, out, 1800);
 }
 
 // ---------- music ----------

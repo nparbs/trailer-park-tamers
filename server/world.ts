@@ -16,6 +16,8 @@ const ASK_TTL = 30_000;
 const CHAT_GAP = 900;
 const MAX_SAVE = 400_000;
 const DIRS: Dir[] = ['up', 'down', 'left', 'right'];
+const WHO_GAP = 1500;
+const WHO_MAX = 200;
 
 export class Client {
   id = '';
@@ -27,6 +29,7 @@ export class Client {
   dir: Dir = 'down';
   busy = false;
   lastChat = 0;
+  lastWho = 0;
   /** Someone asked this player for a fight or trade. */
   incoming = new Map<string, { kind: 'battle' | 'trade'; team?: Drifter[]; at: number }>();
   pvp: PvpRoom | null = null;
@@ -104,6 +107,15 @@ export class World {
         if (!text || !c.map || now - c.lastChat < CHAT_GAP) return;
         c.lastChat = now;
         return this.toMap(c.map, { t: 'chat', id: c.id, name: c.name, text });
+      }
+      case 'who': {
+        const now = Date.now();
+        if (now - c.lastWho < WHO_GAP) return;
+        c.lastWho = now;
+        const list = [...this.byId.values()]
+          .slice(0, WHO_MAX)
+          .map((o) => ({ id: o.id, name: o.name, map: o.map, busy: !!o.info().busy }));
+        return c.send({ t: 'who', list });
       }
       case 'profile': {
         if (m.name !== undefined) c.name = cleanName(m.name) || c.name;

@@ -38,6 +38,8 @@ export type ClientMsg =
   | { t: 'move'; x: number; y: number; dir: Dir }
   | { t: 'busy'; busy: boolean }
   | { t: 'chat'; text: string }
+  /** Ask for everyone who's online and where they are. */
+  | { t: 'who' }
   | { t: 'profile'; name?: string; outfit?: number }
   // Challenges and trades start the same way: ask, then the other player answers.
   | { t: 'ask'; to: string; kind: 'battle' | 'trade'; team?: Drifter[] }
@@ -58,6 +60,8 @@ export type ServerMsg =
   | { t: 'pbusy'; id: string; busy: boolean }
   | { t: 'chat'; id: string; name: string; text: string }
   | { t: 'online'; count: number }
+  /** map is a map id, or '' for someone on the title screen. */
+  | { t: 'who'; list: { id: string; name: string; map: string; busy: boolean }[] }
   | { t: 'asked'; from: string; name: string; kind: 'battle' | 'trade' }
   | { t: 'declined'; from: string; name: string; kind: 'battle' | 'trade'; reason?: string }
   | { t: 'b_start'; foe: { name: string; outfit: number; team: Drifter[] }; you: Drifter[] }

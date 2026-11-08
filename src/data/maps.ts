@@ -212,6 +212,7 @@ export const MAPS: Record<string, MapDef> = {
         id: 'tr_cook', x: 4, y: 1, look: 'dale', dir: 'down',
         trainer: { cls: 'COOK', name: 'LARRY', team: [['KENNY', 5], ['LARRY', 6]], sight: 3, intro: ['WHOA. Shut the door! Do you have ANY idea how volatile this is?!'], lose: 'Fine. Fine! Just do not touch the blue stuff.', after: "This is a perfectly legal chemistry hobby. I'm making... soap.", reward: 200 },
       },
+      { id: 'tut_tweaker', x: 6, y: 4, look: 'bum', dir: 'left', script: 'tutor' },
     ],
     signs: [
       { x: 0, y: 1, text: 'Beakers, tubes and a hot plate. Everything is labelled "SOAP".' },
@@ -281,7 +282,10 @@ export const MAPS: Record<string, MapDef> = {
       ',,,M,,,',
     ],
     warps: [{ x: 3, y: 5, to: 'park', tx: 14, ty: 11, face: 'down' }],
-    npcs: [{ id: 'cletus', x: 4, y: 2, look: 'hick', dir: 'down', script: 'cletus' }],
+    npcs: [
+      { id: 'cletus', x: 4, y: 2, look: 'hick', dir: 'down', script: 'cletus' },
+      { id: 'tut_drunk', x: 3, y: 3, look: 'bum', dir: 'left', script: 'tutor' },
+    ],
   },
 
   route1: {
@@ -450,6 +454,7 @@ export const MAPS: Record<string, MapDef> = {
     npcs: [
       { id: 'skateclerk', x: 2, y: 1, look: 'skater', dir: 'down', script: 'skateshop' },
       { id: 'skate_guy', x: 6, y: 4, look: 'hick', dir: 'left', wander: true, talk: "I pawned my wedding ring here. Then I bought it back. Then I pawned it again. It's like a savings account." },
+      { id: 'tut_fence', x: 8, y: 5, look: 'thug2', dir: 'left', script: 'tutor' },
     ],
     signs: [
       { x: 1, y: 0, text: 'A wall of skateboards. Three of them still have the price tag from 1997.' },
@@ -479,6 +484,7 @@ export const MAPS: Record<string, MapDef> = {
         id: 'tr_grower', x: 7, y: 3, look: 'hick', dir: 'left',
         trainer: { cls: 'GROWER', name: 'SKUNK', team: [['KYLE', 8], ['NED', 9]], sight: 3, intro: ["Whoa whoa whoa. Close the door, you're letting the vibes out."], lose: "Heavy, man. Okay. Use the empty pots, I don't care.", after: 'Drop a BAG SEED in one of those empty pots. Come back in a bit and boom: joints.', reward: 140 },
       },
+      { id: 'tut_stoner', x: 7, y: 5, look: 'skater', dir: 'left', script: 'tutor' },
     ],
     signs: [
       { x: 0, y: 3, text: '', script: 'pot0' },

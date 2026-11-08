@@ -10,7 +10,12 @@
   <body>
     <div id="app">
       <div id="game"></div>
-      <div id="hud" hidden><span id="netdot"></span><span id="nettext"></span></div>
+      <button id="musicbtn" type="button" title="Music on/off" aria-label="Mute music"><svg viewBox="0 0 12 12" width="18" height="18" aria-hidden="true"><path class="note" d="M4 1h7v2H6v6H5v1H4v1H1v-1H0V8h1V7h3V1zM9 3h2v5h-1v1H9v1H6V9h1V7h2V3z"/><line class="slash" x1="0.5" y1="11.5" x2="11.5" y2="0.5"/></svg></button>
+      <button id="hud" type="button" hidden title="Who's online"><span id="netdot"></span><span id="nettext"></span></button>
+      <div id="who" hidden role="dialog" aria-label="Players online">
+        <div class="whohead"><span>WHO'S ONLINE</span><button type="button" id="whoclose" aria-label="Close">X</button></div>
+        <ul id="wholist"></ul>
+      </div>
       <div id="chatlog" aria-live="polite"></div>
       <form id="chatbar" autocomplete="off" hidden>
         <input id="chatin" maxlength="90" placeholder="Say something..." enterkeyhint="send" />

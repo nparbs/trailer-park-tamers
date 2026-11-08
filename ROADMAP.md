@@ -54,17 +54,30 @@ Tone rule for all new content: cartoon satire. The joke is the premise and the c
 - [x] EXIT in the start menu saves and goes back to the title screen
 - [x] Fixes: moves doing nothing against a trainer's second fighter, menu arrow overlapping FIGHT/CREW, text showing through menus, taps skipping battle text, crew list names running into HP bars
 
+## v0.3.1: Tutors and quality of life ✅
+
+- [x] HP bars: dropped the orange "HP" stub; bars turn orange under 40% and red under 15%
+- [x] Drifters moan when they drop into the orange and groan when they hit the red (the pitch depends on the species)
+- [x] Esc opens the start menu on PC (and still backs out of menus)
+- [x] Click the "N ONLINE" counter to see everyone online and which map they're on
+- [x] Music on/off button in the top left (or press M); sound effects stay on
+- [x] Move tutors who teach vice moves for cash. HOLY drifters refuse drugs and booze
+  - BUDS in the grow house: Bong Clear, Couch Lock, Hotbox (after beating Skunk)
+  - SPEEDY in the "Not a Meth Lab" trailer: Smoke Meth, Tweak Out, Lab Explosion (after beating Larry)
+  - RANDY on Cletus's couch: Shotgun a Beer, Keg Stand, Three-Day Bender
+  - VINNIE the fence in Pawn & Skate: Five-Finger Discount, Snitch, Smash & Grab
+
 ## v0.2.x: Online follow-ups
 
 - [ ] Server-side progress checks (money, levels and items can currently be edited in a save)
 - [ ] Report and mute for chat, and a word filter toggle
 - [ ] Friends list and whispers across maps
 - [ ] Battle tower or ranked fights with a leaderboard
-- [ ] Show who's online on each map from the start menu
+- [x] Show who's online and where (click the online counter)
 - [ ] A spectator mode for fights
 - [ ] Block walking onto another player's tile (right now you can stand on top of each other)
 
-## v0.3: The Bottoms
+## v0.4: The Bottoms
 
 The taped-off road east of Grimsby opens up.
 
@@ -77,7 +90,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] A second save slot and an "are you sure" before overwriting
 - [ ] Move animations by type instead of one lunge for everything
 
-## v0.4: Polish pass
+## v0.5: Polish pass
 
 - [ ] Ledges you can hop down, and cut-through fences that need a "bolt cutters" field move
 - [ ] Overworld items hidden in trash piles (press A on them)
@@ -89,7 +102,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] Balance pass on early-game levels, prize money and catch rates
 - [ ] Playtest on a phone: button sizes, landscape overlap, audio unlock
 
-## v0.5: The rest of the map
+## v0.6: The rest of the map
 
 - [ ] Rail yard and freight trains (riding boxcars as fast travel)
 - [ ] The landfill (big encounter area, a Scrap-type boss)
@@ -99,12 +112,43 @@ The taped-off road east of Grimsby opens up.
 - [ ] Field moves that open paths: shove a dumpster, climb a fence, talk past a bouncer
 - [ ] About 80 drifters total
 
-## v0.6: Endgame
+## v0.7: Endgame
 
 - [ ] City Hall: four council members and the mayor as the final gauntlet
 - [ ] Credits, then post-game rematches and a rare-drifter hunt
 - [ ] Full StreetDex with area info ("Found in: weeds behind the Gas-N-Go")
 - [ ] Legendary-tier drifters (the guy who's been living in the airport since 1994)
+
+## Vice and crime systems
+
+Ideas that build on the tutors. Pick from these when planning a milestone.
+
+- [ ] More tutors as the map grows: a liquor store owner in The Bottoms (Pull from the Handle, Boxed Wine Bash), a tattoo artist (Face Tat: lowers the foe's accuracy), a bookie at the motel (Double or Nothing: a coin-flip hit), a trucker at the truck stop (No-Doz Haul), a street preacher who teaches HOLY moves and refuses to teach anyone carrying drugs
+- [ ] Comedown: crew who used a vice move in a fight can wake up HUNGOVER (slower for the next fight) unless you feed them a burrito
+- [ ] Heat meter: losing to cops, Snitch, shoplifting and cooking raise your heat; at high heat cops patrol the roads and challenge you. Pay it off at the bail bondsman or lie low in a dumpster
+- [ ] Cops as trainers who confiscate a random vice item if you lose
+- [ ] Shoplifting at the Gas-N-Go: a quick timing minigame, caught = heat and a fight with the clerk
+- [ ] Can and copper recycling as a steady money grind (a scrapyard that buys SCRAP drops)
+- [ ] Scratch-off tickets and a back-room card game at the motel
+- [ ] Dive bar arena: three fights in a row, no healing between, prize pot resets daily
+- [ ] Cook more than joints: the meth lab and a moonshine still produce items on a timer, but each batch can blow up (a short fight with a LAB FIRE drifter)
+- [ ] Side hustles from Uncle Dale: deliver a "package", collect debts, find his lost dog (who is also a drifter)
+- [ ] Pawn shop buys items back for half price
+
+## Sound and feel
+
+- [ ] Every species gets a short cry when sent out, built from the same voice synth as the moans
+- [ ] A low-HP warning beep for your lead, like the handhelds (with a setting to turn it off)
+- [ ] Separate music and sound volume sliders in the start menu
+- [ ] Battle hit sounds by move type (glass break for BOOZE, gunshot for STRAPPED, sizzle for CHEM)
+
+## Online ideas
+
+- [ ] Crews (player gangs) with a tag, a shared chat channel and turf on each map; most PvP wins in a week holds the turf
+- [ ] Click a name in the who's-online list to whisper, challenge or warp to the nearest payphone on their map
+- [ ] Emotes with little animations: /flex, /puke, /pass out, /pray
+- [ ] Wanted posters on the Grimsby notice board showing the top PvP players
+- [ ] Player stalls: set out a blanket on the sidewalk and sell items to other players while you're online
 
 ## Later
 

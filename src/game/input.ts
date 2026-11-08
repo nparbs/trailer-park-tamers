@@ -24,6 +24,8 @@ class InputState {
   private sources = new Map<Key, Set<string>>();
   /** Most recently pressed direction, so walking follows the newest key. */
   private dirOrder: Key[] = [];
+  /** Esc is B everywhere, but in the overworld it also opens the menu like START. */
+  private escJust = false;
 
   press(k: Key, source: string) {
     let s = this.sources.get(k);
@@ -70,6 +72,15 @@ class InputState {
     return this.justPressed.has(k);
   }
 
+  /** Esc was pressed this frame (keyboard only). */
+  escPressed() {
+    return this.escJust;
+  }
+
+  pressEsc() {
+    this.escJust = true;
+  }
+
   /** True on the first press, then repeatedly while held (for scrolling menus). */
   repeat(k: Key) {
     if (this.justPressed.has(k)) return true;
@@ -93,10 +104,12 @@ class InputState {
   /** Swallow everything pressed this frame (used when a scene hands over control). */
   consume() {
     this.justPressed.clear();
+    this.escJust = false;
   }
 
   endFrame() {
     this.justPressed.clear();
+    this.escJust = false;
   }
 }
 
@@ -113,6 +126,7 @@ export function installInput() {
     if (!k) return;
     e.preventDefault();
     if (!e.repeat) Input.press(k, 'kb:' + e.code);
+    if (!e.repeat && e.code === 'Escape') Input.pressEsc();
   });
   window.addEventListener('keyup', (e) => {
     const k = KEYMAP[e.code];

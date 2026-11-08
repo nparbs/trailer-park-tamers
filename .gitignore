@@ -4,7 +4,7 @@ shots
 *.log
 .DS_Store
 dist-server
-data
+/data
 .env
 .deploy.local.json
 .claude/settings.local.json

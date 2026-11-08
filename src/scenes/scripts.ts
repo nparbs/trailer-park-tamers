@@ -6,6 +6,7 @@ import { G, addItem, healParty, markSeen, recruit } from '../game/state';
 import { music, sfx } from '../audio/sound';
 import { shop, storage } from '../ui/screens';
 import type { Overworld, Walker } from './Overworld';
+import { tutor } from './tutor';
 
 type Script = (ow: Overworld, n?: Walker) => Promise<void>;
 
@@ -238,6 +239,8 @@ export const SCRIPTS: Record<string, Script> = {
     await shop(ow, ui, ['SKATEBOARD', 'TAPE', 'SALTS', 'ENERGY'], 'PAWN & SKATE');
     if (G.bag.SKATEBOARD) await ui.say('CLERK: Use the board from your BAG, or hit SELECT. Do NOT skate in my store.');
   },
+
+  tutor: (ow, n) => tutor(ow, n!.def!.id),
 
   pot0: (ow) => pot(ow, 'pot0'),
   pot1: (ow) => pot(ow, 'pot1'),
