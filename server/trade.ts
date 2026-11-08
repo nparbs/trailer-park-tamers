@@ -69,8 +69,8 @@ export class TradeRoom {
       s.seen = Array.from(new Set([...(s.seen ?? []), d.sp]));
       s.caught = Array.from(new Set([...(s.caught ?? []), d.sp]));
     }
-    this.store.save(this.a.id, JSON.stringify(sa));
-    this.store.save(this.b.id, JSON.stringify(sb));
+    this.store.save(this.a.id, JSON.stringify(sa), this.a.slot);
+    this.store.save(this.b.id, JSON.stringify(sb), this.b.slot);
     this.a.send({ t: 'tr_done', state: sa, got: db });
     this.b.send({ t: 'tr_done', state: sb, got: da });
     this.end();

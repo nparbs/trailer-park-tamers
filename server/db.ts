@@ -10,7 +10,10 @@ export interface Account {
   name: string;
   outfit: number;
   save: string | null;
+  save2: string | null;
 }
+
+export type Slot = 1 | 2;
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -48,6 +51,9 @@ export class Store {
         seen INTEGER NOT NULL
       );
     `);
+    // Second save slot, added in v0.5. Older databases get the column on first start.
+    const cols = this.db.prepare('PRAGMA table_info(accounts)').all() as { name: string }[];
+    if (!cols.some((c) => c.name === 'save2')) this.db.exec('ALTER TABLE accounts ADD COLUMN save2 TEXT');
   }
 
   create(name: string, outfit: number): { account: Account; token: string } {
@@ -55,23 +61,24 @@ export class Store {
     const id = randomBytes(5).toString('hex');
     const now = Date.now();
     this.db.prepare('INSERT INTO accounts (id, token_hash, name, outfit, save, created, seen) VALUES (?, ?, ?, ?, NULL, ?, ?)').run(id, hash(token), name, outfit, now, now);
-    return { account: { id, name, outfit, save: null }, token };
+    return { account: { id, name, outfit, save: null, save2: null }, token };
   }
 
   byToken(token: string): Account | null {
-    const row = this.db.prepare('SELECT id, name, outfit, save FROM accounts WHERE token_hash = ?').get(hash(token)) as Account | undefined;
+    const row = this.db.prepare('SELECT id, name, outfit, save, save2 FROM accounts WHERE token_hash = ?').get(hash(token)) as Account | undefined;
     if (!row) return null;
     this.db.prepare('UPDATE accounts SET seen = ? WHERE id = ?').run(Date.now(), row.id);
     return row;
   }
 
-  load(id: string): string | null {
-    const row = this.db.prepare('SELECT save FROM accounts WHERE id = ?').get(id) as { save: string | null } | undefined;
-    return row?.save ?? null;
+  load(id: string, slot: Slot = 1): string | null {
+    const row = this.db.prepare('SELECT save, save2 FROM accounts WHERE id = ?').get(id) as { save: string | null; save2: string | null } | undefined;
+    return (slot === 2 ? row?.save2 : row?.save) ?? null;
   }
 
-  save(id: string, json: string) {
-    this.db.prepare('UPDATE accounts SET save = ?, seen = ? WHERE id = ?').run(json, Date.now(), id);
+  save(id: string, json: string, slot: Slot = 1) {
+    const col = slot === 2 ? 'save2' : 'save';
+    this.db.prepare(`UPDATE accounts SET ${col} = ?, seen = ? WHERE id = ?`).run(json, Date.now(), id);
   }
 
   profile(id: string, name: string, outfit: number) {

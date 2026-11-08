@@ -20,6 +20,19 @@ export async function useItemOutside(ow: Overworld, id: ItemId) {
     await ow.ui.say('Plant it in an empty pot at the grow house in Grimsby.');
     return;
   }
+  if (def.kind === 'held') {
+    const k = await pickFromParty(ow, ow.ui, { title: `Give ${def.name.toUpperCase()} to who?` });
+    if (k < 0) return;
+    const d = G.party[k];
+    if (d.held === id) return void (await ow.ui.say(`${displayName(d)} is already holding one.`));
+    const old = d.held;
+    G.bag[id]!--;
+    if (old) G.bag[old] = (G.bag[old] ?? 0) + 1;
+    d.held = id;
+    sfx('select');
+    await ow.ui.say(old ? `${displayName(d)} swapped the ${item(old).name.toUpperCase()} for the ${def.name.toUpperCase()}.` : `${displayName(d)} is now holding the ${def.name.toUpperCase()}.`);
+    return;
+  }
   const i = await pickFromParty(ow, ow.ui, { title: `Use ${def.name.toUpperCase()} on who?` });
   if (i < 0) return;
   const d = G.party[i];

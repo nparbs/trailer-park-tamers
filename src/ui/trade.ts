@@ -5,7 +5,7 @@ import Phaser from 'phaser';
 import { species } from '../data/species';
 import { displayName, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
-import { G } from '../game/state';
+import { G, slot } from '../game/state';
 import { net } from '../net/client';
 import { sfx } from '../audio/sound';
 import { cursor, H, label, panel, UI, W } from './ui';
@@ -95,7 +95,7 @@ export async function tradeScreen(scene: Phaser.Scene, ui: UI, foeName: string, 
         if (G.party.length < 1) return undefined;
         confirmed = true;
         sfx('select');
-        net.send({ t: 'tr_confirm', state: G });
+        net.send(slot === 2 ? { t: 'tr_confirm', state: G, slot: 2 } : { t: 'tr_confirm', state: G });
       } else {
         mine = i;
         sfx('select');

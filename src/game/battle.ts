@@ -349,8 +349,10 @@ export class Battle {
     if (userTypes.includes(def.type)) dmg = Math.floor(dmg * 1.5);
     const eff = effectiveness(def.type, species(target.sp).types as TypeId[]);
     dmg = Math.floor(dmg * eff);
-    const crit = canCrit && this.rng() < (def.highCrit ? 1 / 8 : 1 / 16);
+    const critOdds = (def.highCrit ? 1 / 8 : 1 / 16) * (user.held === 'SCRATCHER' ? 2 : 1);
+    const crit = canCrit && this.rng() < critOdds;
     if (crit) dmg = Math.floor(dmg * 1.5);
+    if (user.held === 'SHIV' && canCrit) dmg = Math.floor(dmg * 1.2);
     dmg = Math.floor((dmg * (85 + Math.floor(this.rng() * 16))) / 100);
     return { dmg: eff === 0 ? 0 : Math.max(1, dmg), eff, crit };
   }
@@ -360,6 +362,12 @@ export class Battle {
     const dealt = Math.min(d.hp, amount);
     d.hp -= dealt;
     ev.push({ t: 'hp', side, hp: d.hp, max: maxHp(d) });
+    // Hip flask: one pull when they drop to half or below.
+    if (d.held === 'FLASK' && d.hp > 0 && d.hp <= maxHp(d) / 2) {
+      d.held = undefined;
+      ev.push({ t: 'msg', text: `${this.label(side)} took a pull from the HIP FLASK!` });
+      this.heal(side, Math.max(1, Math.floor(maxHp(d) / 4)), ev);
+    }
     return dealt;
   }
 

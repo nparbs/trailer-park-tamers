@@ -54,7 +54,7 @@ Tone rule for all new content: cartoon satire. The joke is the premise and the c
 - [x] EXIT in the start menu saves and goes back to the title screen
 - [x] Fixes: moves doing nothing against a trainer's second fighter, menu arrow overlapping FIGHT/CREW, text showing through menus, taps skipping battle text, crew list names running into HP bars
 
-## v0.3.1: Tutors and quality of life ✅
+## v0.4: Tutors and quality of life ✅
 
 - [x] HP bars: dropped the orange "HP" stub; bars turn orange under 40% and red under 15%
 - [x] Drifters moan when they drop into the orange and groan when they hit the red (the pitch depends on the species)
@@ -77,20 +77,21 @@ Tone rule for all new content: cartoon satire. The joke is the premise and the c
 - [ ] A spectator mode for fights
 - [ ] Block walking onto another player's tile (right now you can stand on top of each other)
 
-## v0.4: The Bottoms
+## v0.5: The Bottoms ✅
 
-The taped-off road east of Grimsby opens up.
+The taped-off road east of Grimsby opens up once you beat Big Tony.
 
-- [ ] The Bottoms: a rougher neighbourhood of row houses, corner stores and an underpass camp
-- [ ] Second boss and badge (a slumlord who runs the row houses)
-- [ ] 12 new drifters, including two new evolution lines
-- [ ] Rival fight #2 when you reach the underpass
-- [ ] Nicknames when you bag someone, and a name rater (the tattoo parlour)
-- [ ] Held items (a lucky scratcher, a flask, a shiv made of a toothbrush)
-- [ ] A second save slot and an "are you sure" before overwriting
-- [ ] Move animations by type instead of one lunge for everything
+- [x] The Bottoms: row houses, the Lucky Star deli, a tattoo parlour, a free clinic (heal and respawn), a vacant lot and a camp under the highway overpass, with its own music
+- [x] Second boss and badge: SAL the slumlord, in Sal's Properties with three tenant trainers. Badge: SECURITY DEPOSIT
+- [x] 12 new drifters, including two new evolution lines (Squatter Sid → Adverse Possession Sid, Moonshine Mel → Still King Mel) and 8 new moves
+- [x] Rival fight #2 when you walk into the underpass; Bobby Ray hands over a LUCKY SCRATCHER when you win
+- [x] Nicknames when you bag someone, and INKY at the tattoo parlour renames crew for free
+- [x] Held items: Lucky Scratcher (double crit odds), Hip Flask (heals a quarter once under half HP), Toothbrush Shiv (+20% damage). Give from the BAG, take back from the crew menu
+- [x] Two save slots (both saved to the server when online) and an "erase it?" check before a new game overwrites one
+- [x] Move animations by type (bottle lob, chem bubbles, psycho rings, holy beam, claw marks, gunshot tracer and so on), plus glows for buffs and heals
+- [ ] The bridge east of the Bottoms is a "ROAD CLOSED" sign for now
 
-## v0.5: Polish pass
+## v0.6: Polish pass
 
 - [ ] Ledges you can hop down, and cut-through fences that need a "bolt cutters" field move
 - [ ] Overworld items hidden in trash piles (press A on them)
@@ -102,7 +103,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] Balance pass on early-game levels, prize money and catch rates
 - [ ] Playtest on a phone: button sizes, landscape overlap, audio unlock
 
-## v0.6: The rest of the map
+## v0.7: The rest of the map
 
 - [ ] Rail yard and freight trains (riding boxcars as fast travel)
 - [ ] The landfill (big encounter area, a Scrap-type boss)
@@ -112,7 +113,7 @@ The taped-off road east of Grimsby opens up.
 - [ ] Field moves that open paths: shove a dumpster, climb a fence, talk past a bouncer
 - [ ] About 80 drifters total
 
-## v0.7: Endgame
+## v0.8: Endgame
 
 - [ ] City Hall: four council members and the mayor as the final gauntlet
 - [ ] Credits, then post-game rematches and a rare-drifter hunt

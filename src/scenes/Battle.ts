@@ -12,6 +12,8 @@ import { FONT } from '../gfx/font';
 import { darken } from '../gfx/pixels';
 import { TYPE_INFO } from '../data/types';
 import { UI, label, panel } from '../ui/ui';
+import { askNickname } from '../ui/nickname';
+import { moveFx } from './fx';
 import { drawHpBar, HP_CRIT, HP_LOW, pickFromParty, pickItem, showSummary } from '../ui/screens';
 import { net } from '../net/client';
 import type { BattleInbox, BattleUpdate } from '../net/inbox';
@@ -408,6 +410,10 @@ ${shortName(displayName(b.me).toUpperCase(), 13)}`, 13);
     const id = await pickItem(this, this.ui);
     if (!id) return null;
     const def = item(id);
+    if (def.kind === 'held') {
+      await this.say('Hand that out before the fight, from the BAG in the start menu.');
+      return null;
+    }
     if (def.kind === 'key' || def.kind === 'seed') {
       await this.say("That won't help in a fight.");
       return null;
@@ -532,6 +538,9 @@ ${shortName(displayName(b.me).toUpperCase(), 13)}`, 13);
     } else {
       await this.tween({ targets: spr, y: spr.y - 6, duration: 100, yoyo: true, repeat: 1 });
     }
+    // Middles of the two fighters (sprites stand on their feet).
+    const mid = (s: Side) => (s === 'enemy' ? { x: EX, y: EY - 26 } : { x: PX, y: PY - 26 });
+    await moveFx(this, def, mid(side), mid(side === 'enemy' ? 'player' : 'enemy'));
   }
 
   private async animHit(side: Side, eff: number) {
@@ -658,6 +667,8 @@ ${shortName(displayName(b.me).toUpperCase(), 13)}`, 13);
       const c = this.b.caught;
       c.status = c.status === 'out' ? null : c.status;
       c.caughtWith = this.lastThrow;
+      const yes = await this.ui.ask(`Give ${displayName(c).toUpperCase()} a nickname?`);
+      if (yes === 0) askNickname(c);
       const where = recruit(c);
       if (where === 'storage') await this.say(`Your crew is full, so ${displayName(c).toUpperCase()} was dropped off at your STORAGE UNIT.`, 0);
       else await this.say(`${displayName(c).toUpperCase()} joined your crew!`, 0);

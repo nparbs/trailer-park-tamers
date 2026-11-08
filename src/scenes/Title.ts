@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { FONT } from '../gfx/font';
 import { Input } from '../game/input';
-import { G, hasSave, load, loadFrom, newGame, setState } from '../game/state';
+import { G, loadFrom, newGame, peekLocal, setSlot, setState, type GameState, type Slot } from '../game/state';
 import { net } from '../net/client';
 import { OUTFIT_LOOKS } from '../gfx/people';
 import { isMuted, music, sfx, toggleMute } from '../audio/sound';
@@ -47,7 +47,7 @@ export class Title extends Phaser.Scene {
     for (const t of [t1, t2]) if ((t as any).setDropShadow) t.setDropShadow(2, 2, 0x201828, 1);
     const press = this.add.bitmapText(120, 92, FONT, 'PRESS START', 8).setOrigin(0.5, 0).setTint(0xf8f8f8);
     this.tweens.add({ targets: press, alpha: 0.1, duration: 500, yoyo: true, repeat: -1 });
-    this.add.bitmapText(2, 2, FONT, 'v' + __APP_VERSION__, 8).setTint(0x806878);
+    this.add.bitmapText(2, 150, FONT, 'v' + __APP_VERSION__, 8).setTint(0x806878);
 
     music('title');
     this.time.delayedCall(400, () => (this.ready = true));
@@ -77,8 +77,9 @@ export class Title extends Phaser.Scene {
       this.ui.close();
     }
     for (;;) {
-      const cloud = net.isOnline && net.serverSave ? net.serverSave : null;
-      const opts = cloud || hasSave() ? ['CONTINUE', 'NEW GAME', 'USE CODE', 'SOUND'] : ['NEW GAME', 'USE CODE', 'SOUND'];
+      const saves = { 1: this.slotSave(1), 2: this.slotSave(2) } as Record<Slot, GameState | null>;
+      const any = !!(saves[1] || saves[2]);
+      const opts = any ? ['CONTINUE', 'NEW GAME', 'USE CODE', 'SOUND'] : ['NEW GAME', 'USE CODE', 'SOUND'];
       const i = await this.ui.choose(opts, { x: 76, y: 88, w: 96 });
       const o = opts[i];
       if (o === 'USE CODE') {
@@ -92,20 +93,49 @@ export class Title extends Phaser.Scene {
         continue;
       }
       if (o === 'CONTINUE') {
-        if (cloud ? loadFrom(cloud) : load()) return this.go();
+        const s = saves[1] && saves[2] ? await this.pickSlot(saves, 'Continue which game?') : saves[1] ? 1 : 2;
+        if (!s) continue;
+        setSlot(s);
+        if (loadFrom(saves[s])) return this.go();
         await this.ui.say("That save file is busted. Starting fresh might be your only hope.");
         this.ui.close();
         continue;
       }
-      if (cloud || hasSave()) {
-        const sure = await this.ui.ask('Start over? Your old save gets wiped when you next save.');
-        this.ui.close();
-        if (sure !== 0) continue;
+      // NEW GAME: pick a slot when there's anything to lose, and confirm before erasing one.
+      let s: Slot | null = 1;
+      if (any) {
+        s = await this.pickSlot(saves, 'Start the new game in which slot?');
+        if (!s) continue;
+        const old = saves[s];
+        if (old) {
+          const sure = await this.ui.ask(`Slot ${s} has ${old.name}'s game (${describe(old)}). Erase it and start over?`, ['NO', 'YES']);
+          this.ui.close();
+          if (sure !== 1) continue;
+        }
       }
+      setSlot(s);
       setState(newGame());
       await this.intro();
       return this.go();
     }
+  }
+
+  /** The save in a slot: the server's copy when online, otherwise this browser's. */
+  private slotSave(s: Slot): GameState | null {
+    const cloud = net.isOnline ? (s === 1 ? net.serverSave : net.serverSave2) : null;
+    if (cloud && typeof cloud === 'object' && (cloud as GameState).version === 1) return cloud as GameState;
+    return peekLocal(s);
+  }
+
+  private async pickSlot(saves: Record<Slot, GameState | null>, prompt: string): Promise<Slot | null> {
+    const label = (s: Slot) => {
+      const g = saves[s];
+      return g ? `${s}: ${g.name.slice(0, 8)} ${describe(g, true)}` : `${s}: EMPTY`;
+    };
+    this.ui.show(prompt);
+    const k = await this.ui.choose([label(1), label(2)], { x: 40, y: 60, cancel: true });
+    this.ui.close();
+    return k < 0 ? null : ((k + 1) as Slot);
   }
 
   private async intro() {
@@ -184,6 +214,14 @@ export class Title extends Phaser.Scene {
       this.scene.start('Overworld');
     });
   }
+}
+
+/** "2 badges, 1:05" (or "2B 1:05" when short). */
+function describe(g: GameState, short = false) {
+  const n = g.badges?.length ?? 0;
+  const mins = Math.floor((g.playMs ?? 0) / 60000);
+  const time = `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`;
+  return short ? `${n}B ${time}` : `${n} badge${n === 1 ? '' : 's'}, ${time}`;
 }
 
 export { isMuted };

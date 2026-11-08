@@ -1,4 +1,4 @@
-export type ItemKind = 'catch' | 'heal' | 'cure' | 'revive' | 'key' | 'seed';
+export type ItemKind = 'catch' | 'heal' | 'cure' | 'revive' | 'key' | 'seed' | 'held';
 
 export interface ItemDef {
   name: string;
@@ -25,6 +25,10 @@ export const ITEMS = {
   PILLS: { name: 'Bootleg Pills', kind: 'heal', price: 700, heal: 9999, desc: 'Fully restores HP. Pressed in a garage. Probably fine.' },
   SEED: { name: 'Bag Seed', kind: 'seed', price: 150, desc: 'Plant it in a pot at the grow house. Harvest JOINTS later.' },
   SKATEBOARD: { name: 'Skateboard', kind: 'key', price: 1000, desc: 'Use it, or press SELECT/Shift, to skate around twice as fast.' },
+  // Held items: give one to a crew member and it works on its own in fights.
+  SCRATCHER: { name: 'Lucky Scratcher', kind: 'held', price: 1200, desc: 'Held: doubles the odds of a critical hit. Not a winner yet, but due.' },
+  FLASK: { name: 'Hip Flask', kind: 'held', price: 800, desc: 'Held: under half HP, they take a pull and heal a quarter. One use.' },
+  SHIV: { name: 'Toothbrush Shiv', kind: 'held', price: 1500, desc: 'Held: attacks hit 20% harder. Made in county lockup.' },
   DEFIB: { name: 'Jumper Cables', kind: 'revive', price: 1500, revive: 0.5, desc: 'Brings a knocked-out crew member back with half HP.' },
 } satisfies Record<string, ItemDef>;
 

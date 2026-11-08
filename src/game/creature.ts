@@ -1,5 +1,6 @@
 import { move, type MoveId, type Status } from '../data/moves';
 import { species, type SpeciesId } from '../data/species';
+import type { ItemId } from '../data/items';
 
 export interface MoveSlot {
   id: MoveId;
@@ -18,6 +19,8 @@ export interface Drifter {
   statusTurns: number;
   ivs: { hp: number; atk: number; def: number; spd: number };
   caughtWith?: string;
+  /** A held item (kind 'held') that works by itself in fights. */
+  held?: ItemId;
 }
 
 export interface Stats {

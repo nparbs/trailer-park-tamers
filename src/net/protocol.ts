@@ -5,6 +5,7 @@ import type { Drifter } from '../game/creature';
 import type { Dir } from '../game/state';
 import { MOVES, type MoveId } from '../data/moves';
 import { SPECIES, type SpeciesId } from '../data/species';
+import { ITEMS, type ItemId } from '../data/items';
 
 /** Bump when the page and server can no longer talk to each other. */
 export const PROTOCOL_VERSION = 1;
@@ -32,7 +33,8 @@ export interface SideSnap {
 
 export type ClientMsg =
   | { t: 'hello'; v: number; token?: string; name?: string; outfit?: number }
-  | { t: 'save'; state: unknown }
+  /** slot is left out for slot 1, so older servers still understand it. */
+  | { t: 'save'; state: unknown; slot?: 2 }
   | { t: 'enter'; map: string; x: number; y: number; dir: Dir }
   | { t: 'leave' }
   | { t: 'move'; x: number; y: number; dir: Dir }
@@ -47,11 +49,11 @@ export type ClientMsg =
   | { t: 'b_action'; action: Action }
   | { t: 'b_forfeit' }
   | { t: 'tr_offer'; index: number }
-  | { t: 'tr_confirm'; state: unknown }
+  | { t: 'tr_confirm'; state: unknown; slot?: 2 }
   | { t: 'tr_cancel' };
 
 export type ServerMsg =
-  | { t: 'welcome'; id: string; token: string; name: string; outfit: number; save: unknown | null; online: number }
+  | { t: 'welcome'; id: string; token: string; name: string; outfit: number; save: unknown | null; save2?: unknown | null; online: number }
   | { t: 'refused'; reason: string }
   | { t: 'players'; map: string; list: PlayerInfo[] }
   | { t: 'join'; p: PlayerInfo }
@@ -120,6 +122,7 @@ export function cleanDrifter(raw: unknown): Drifter | null {
     statusTurns: Math.max(0, Math.min(5, Math.floor(Number(d.statusTurns) || 0))),
     ivs: { hp: iv(ivs.hp), atk: iv(ivs.atk), def: iv(ivs.def), spd: iv(ivs.spd) },
     caughtWith: typeof d.caughtWith === 'string' ? d.caughtWith.slice(0, 20) : undefined,
+    held: typeof d.held === 'string' && d.held in ITEMS && (ITEMS as Record<string, { kind: string }>)[d.held].kind === 'held' ? (d.held as ItemId) : undefined,
   };
 }
 

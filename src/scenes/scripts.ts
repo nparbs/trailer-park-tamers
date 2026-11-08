@@ -4,7 +4,9 @@ import { species, STARTERS, type SpeciesId } from '../data/species';
 import { makeDrifter } from '../game/creature';
 import { G, addItem, healParty, markSeen, recruit } from '../game/state';
 import { music, sfx } from '../audio/sound';
-import { shop, storage } from '../ui/screens';
+import { pickFromParty, shop, storage } from '../ui/screens';
+import { askNickname } from '../ui/nickname';
+import { displayName } from '../game/creature';
 import type { Overworld, Walker } from './Overworld';
 import { tutor } from './tutor';
 
@@ -260,8 +262,152 @@ export const SCRIPTS: Record<string, Script> = {
     } else {
       await ui.talk(
         "OFFICER: You beat Big Tony? Huh. Didn't think anybody would.",
-        "THE BOTTOMS are still taped off though. Check back in the next update.",
+        "We pulled the tape. THE BOTTOMS are east, down this road. Watch your wallet. And your shoes. And your crew.",
       );
+    }
+  },
+
+  async clinic(ow) {
+    const ui = ow.ui;
+    await ui.say("NURSE JOY-LESS: Bottoms Free Clinic. Take a number. The number is one. It's always one.");
+    const yes = await ui.ask('Patch up your crew?');
+    if (yes !== 0) return void (await ui.say("NURSE JOY-LESS: Suit yourself. Don't bleed on the chairs."));
+    ui.close();
+    await healAnim(ow);
+    G.respawn = { map: 'clinic', x: 4, y: 3 };
+    await ui.say("NURSE JOY-LESS: Done. Ice, rest, and stop getting in fights. ...You're not going to stop, are you.");
+  },
+
+  async bodega(ow) {
+    const ui = ow.ui;
+    await ui.say("DELI GUY: Lucky Star. What you need, boss? Don't touch the cat.");
+    const c = await ui.ask('Buy something?', ['BUY', 'NAH']);
+    if (c !== 0) return void (await ui.say('DELI GUY: Aight, boss.'));
+    ui.close();
+    await shop(ow, ui, ['SACK', 'TAPE', 'VAN', 'BURRITO', 'ENERGY', 'FORTY', 'LOKO', 'SALTS', 'DEFIB', 'SCRATCHER', 'FLASK'], 'LUCKY STAR DELI');
+    await ui.say('DELI GUY: Hold stuff like the SCRATCHER or FLASK? Give it to one of your crew from your BAG.');
+  },
+
+  async tattoo(ow) {
+    const ui = ow.ui;
+    if (!G.flags.met_inky) {
+      await ui.talk(
+        "INKY: Welcome to the Ink Hole. I do names. Knuckles, necks, foreheads. Whatever's free.",
+        'Want one of your crew to go by something new? I\'ll put it right on \'em. No charge. Practice makes perfect.',
+      );
+      G.flags.met_inky = true;
+    }
+    for (;;) {
+      const i = await pickFromParty(ow, ui, { title: 'Who gets a new name?' });
+      if (i < 0) return void (await ui.say('INKY: Come back when somebody needs a new identity.'));
+      const d = G.party[i];
+      const old = displayName(d).toUpperCase();
+      const yes = await ui.ask(`Rename ${old}?`);
+      if (yes !== 0) continue;
+      if (askNickname(d)) {
+        sfx('save');
+        await ui.say(`INKY: Done. From now on, ${old} goes by ${displayName(d).toUpperCase()}. Spelled right this time, probably.`);
+      } else {
+        await ui.say("INKY: Changed your mind? Smart. Tattoos are forever. Mostly.");
+      }
+      return;
+    }
+  },
+
+  async miss_dot(ow) {
+    const ui = ow.ui;
+    if (!G.flags.dot_gift) {
+      await ui.talk(
+        "MISS DOT: Sal's been trying to evict me for thirty-one years. I'm still here. Know why?",
+        'Because I fight dirty. Here. My late husband made this in county lockup. He would want it to see some action.',
+      );
+      sfx('levelup');
+      addItem('SHIV', 1);
+      G.flags.dot_gift = true;
+      await ui.say(`${G.name} got a TOOTHBRUSH SHIV!`);
+      await ui.say("MISS DOT: Give it to one of your crew from your BAG. They'll hit harder holding it. Now go knock Sal down a peg.");
+      return;
+    }
+    if (G.flags.badge2) {
+      await ui.say("MISS DOT: You beat Sal? Hah! He came by to fix my sink for the first time in thirty years. Didn't fix it, but he came by.");
+      return;
+    }
+    await ui.say("MISS DOT: Sal's place is the big one. Watch out for Ms. Pearl. She's nicer than me, but she hits harder.");
+  },
+
+  async after_sal(ow) {
+    const ui = ow.ui;
+    if (G.badges.includes('SECURITY DEPOSIT')) return;
+    G.badges.push('SECURITY DEPOSIT');
+    G.flags.badge2 = true;
+    await ui.say("SAL: Fine. Here. The SECURITY DEPOSIT. Proof you survived a lease with me.");
+    sfx('caught');
+    await ui.say(`${G.name} got the SECURITY DEPOSIT!`);
+    await ui.talk(
+      "SAL: Everybody in the Bottoms'll back off you now. Don't let it go to your head. Heads are extra.",
+      "SAL: And that bridge out east? It ain't out. Somebody just doesn't want you crossing it.",
+    );
+    await ui.say("That's the end of THE BOTTOMS for now. Keep training. The bridge opens in a future update.");
+  },
+
+  async rival2(ow) {
+    const ui = ow.ui;
+    if (G.flags.rival2) return;
+    const rival = ow.npc('rival2');
+    const p = ow.player;
+    ui.close();
+    await ui.say(`${G.rival}: CUZ! Hold up!`);
+    ui.close();
+    if (rival) {
+      const near = () => Math.abs(rival.x - p.x) + Math.abs(rival.y - p.y) <= 1;
+      while (!near() && rival.x > p.x + 1) await ow.walk(rival, 'left', 1);
+      while (!near() && rival.y > p.y) await ow.walk(rival, 'up', 1);
+      while (!near() && rival.y < p.y) await ow.walk(rival, 'down', 1);
+      ow.setFacing(rival, rival.x > p.x ? 'left' : rival.x < p.x ? 'right' : rival.y > p.y ? 'up' : 'down');
+      ow.setFacing(p, rival.x > p.x ? 'right' : rival.x < p.x ? 'left' : rival.y > p.y ? 'down' : 'up');
+    }
+    await ui.talk(
+      `${G.rival}: Heard you took down BIG TONY. Everybody's talkin' about it. NOBODY'S talkin' about me.`,
+      "I been livin' under this bridge for a WEEK trainin'. My crew eats out of a dumpster now. They LOVE it.",
+      "Let's go. Rematch. Right here.",
+    );
+    ui.close();
+    const mine = (['WILLIE', 'AMOS', 'PETE'] as SpeciesId[]).find((sp) => G.flags['starter_' + sp]) ?? 'WILLIE';
+    const theirs = RIVAL_PICK[mine];
+    const evo = (species(theirs).evolves?.into ?? theirs) as SpeciesId;
+    const team: [SpeciesId, number][] = [['MO', 14], ['KENNY', 15], [evo, 18]];
+    const result = await ow.battle({
+      enemy: team.map(([sp, lv]) => makeDrifter(sp, lv)),
+      wild: false,
+      trainer: { cls: 'COUSIN', name: G.rival, team, sight: 0, intro: [], lose: "AGAIN?! I ate out of a DUMPSTER for this!", after: '', reward: 600 },
+      trainerLook: 'rival',
+    });
+    if (result !== 'win') return;
+    G.flags.rival2 = true;
+    await ui.talk(
+      `${G.rival}: ...Fine. You're good. Whatever.`,
+      "Here. I won this off a scratcher. Then I lost. Then I kept the scratcher. It's lucky, I swear.",
+    );
+    sfx('levelup');
+    addItem('SCRATCHER', 1);
+    await ui.say(`${G.name} got a LUCKY SCRATCHER!`);
+    await ui.say(`${G.rival}: Give it to one of your crew. Crits for days. Smell ya later, cuz!`);
+    ui.close();
+    if (rival) {
+      for (let i = 0; i < 6; i++) {
+        const dirs = ['right', 'down', 'up'] as const;
+        let moved = false;
+        for (const d of dirs) {
+          const [dx, dy] = d === 'right' ? [1, 0] : d === 'down' ? [0, 1] : [0, -1];
+          if (!ow.blocked(rival.x + dx, rival.y + dy, rival)) {
+            await ow.walk(rival, d, 1, 160);
+            moved = true;
+            break;
+          }
+        }
+        if (!moved) break;
+      }
+      ow.removeNpc('rival2');
     }
   },
 

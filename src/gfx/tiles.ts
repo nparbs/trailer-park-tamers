@@ -121,6 +121,30 @@ function woodWall(p: Pix, base: number) {
   p.rect(0, 14, 16, 2, darken(base, 0.55));
 }
 
+function tent(p: Pix, ground: (p: Pix) => void) {
+  ground(p);
+  p.trap(2, 12, 7, 8, 0, 15, 0x3c70c0);
+  p.trap(2, 12, 7, 8, 5, 10, 0x2c5090);
+  p.rect(6, 9, 4, 5, 0x1c2c48);
+  p.line(8, 1, 8, 2, 0x8c6c4c);
+}
+function fireBarrel(p: Pix, ground: (p: Pix) => void) {
+  ground(p);
+  p.rect(3, 5, 10, 11, 0x8c4c2c);
+  p.rect(3, 8, 10, 1, 0x6c3018);
+  p.rect(3, 12, 10, 1, 0x6c3018);
+  p.rect(3, 5, 10, 2, 0x303030);
+  p.oval(4, 0, 8, 7, 0xf08020);
+  p.oval(6, 1, 4, 5, 0xf8d040);
+}
+/** Shaded concrete under the overpass. */
+function shade(p: Pix) {
+  p.rect(0, 0, 16, 16, 0x48484e);
+  p.speckle(0, 0, 16, 16, 0x3c3c42, 0.18, 81);
+  p.rect(0, 15, 16, 1, 0x404046);
+  p.rect(15, 0, 1, 16, 0x404046);
+}
+
 // ---------- outdoor legend ----------
 export const OUTDOOR: TileDef[] = [
   { ch: '.', draw: (p) => grass(p) },
@@ -154,13 +178,7 @@ export const OUTDOOR: TileDef[] = [
     },
   },
   {
-    ch: 'u', solid: true, draw: (p) => {
-      dirt(p);
-      p.trap(2, 12, 7, 8, 0, 15, 0x3c70c0);
-      p.trap(2, 12, 7, 8, 5, 10, 0x2c5090);
-      p.rect(6, 9, 4, 5, 0x1c2c48);
-      p.line(8, 1, 8, 2, 0x8c6c4c);
-    },
+    ch: 'u', solid: true, draw: (p) => tent(p, dirt),
   },
   {
     ch: 'v', solid: true, draw: (p) => {
@@ -305,15 +323,7 @@ export const OUTDOOR: TileDef[] = [
     },
   },
   {
-    ch: 'F', solid: true, draw: (p) => {
-      dirt(p);
-      p.rect(3, 5, 10, 11, 0x8c4c2c);
-      p.rect(3, 8, 10, 1, 0x6c3018);
-      p.rect(3, 12, 10, 1, 0x6c3018);
-      p.rect(3, 5, 10, 2, 0x303030);
-      p.oval(4, 0, 8, 7, 0xf08020);
-      p.oval(6, 1, 4, 5, 0xf8d040);
-    },
+    ch: 'F', solid: true, draw: (p) => fireBarrel(p, dirt),
   },
   {
     ch: 'q', solid: true, draw: (p) => {
@@ -496,6 +506,81 @@ export const OUTDOOR: TileDef[] = [
       p.rect(3, 9, 3, 2, 0xc8c8c0);
       p.rect(10, 4, 2, 3, 0xc04040);
       p.set(12, 12, 0xe8d050);
+    },
+  },
+
+  // ---------- the Bottoms ----------
+  // Row-house roof: tar paper with a little chimney.
+  {
+    ch: 'r', solid: true, draw: (p) => {
+      p.rect(0, 0, 16, 16, 0x4c3c3c);
+      p.speckle(0, 0, 16, 16, 0x3c2c2c, 0.15, 61);
+      for (let y = 3; y < 16; y += 5) p.rect(0, y, 16, 1, 0x2c2024);
+      p.rect(0, 15, 16, 1, 0x201818);
+    },
+  },
+  // Corner store awning: green and white stripes.
+  {
+    ch: 's', solid: true, draw: (p) => {
+      brick(p, 0x8c6848);
+      p.rect(0, 0, 16, 11, 0xe8e8e0);
+      for (let x = 0; x < 16; x += 4) p.rect(x, 0, 2, 11, 0x3c9c58);
+      p.rect(0, 11, 16, 1, 0x2c6c3c);
+      for (let x = 1; x < 16; x += 4) p.rect(x, 12, 2, 1, 0x3c9c58);
+    },
+  },
+  // Brick with a neon TATTOO sign and some graffiti.
+  {
+    ch: 'z', solid: true, draw: (p) => {
+      brick(p, 0x7c4c5c);
+      p.rect(1, 3, 14, 7, 0x202028);
+      p.rect(2, 4, 12, 5, 0x401838);
+      p.rect(3, 5, 2, 3, 0xf060c0);
+      p.rect(6, 5, 2, 3, 0x60e0f0);
+      p.rect(9, 5, 2, 3, 0xf060c0);
+      p.rect(12, 5, 1, 3, 0x60e0f0);
+      p.line(1, 13, 7, 11, 0x50d050);
+      p.line(9, 14, 14, 12, 0xf0d040);
+    },
+  },
+  // Highway overpass deck seen from below: concrete with a dark underside.
+  {
+    ch: 'V', solid: true, draw: (p) => {
+      p.rect(0, 0, 16, 16, 0x8c8c90);
+      p.speckle(0, 0, 16, 16, 0x7c7c80, 0.12, 71);
+      p.rect(0, 0, 16, 2, 0xa8a8ac);
+      p.rect(0, 10, 16, 6, 0x4c4c54);
+      p.rect(0, 10, 16, 1, 0x34343c);
+      p.rect(3, 4, 4, 1, 0xd05050);
+      p.rect(9, 5, 5, 1, 0x50a0d0);
+    },
+  },
+  // Overpass pillar.
+  {
+    ch: 'K', solid: true, draw: (p) => {
+      p.rect(0, 0, 16, 16, 0x34343c);
+      p.rect(3, 0, 10, 16, 0x9c9ca0);
+      p.rect(3, 0, 2, 16, 0xb8b8bc);
+      p.rect(11, 0, 2, 16, 0x7c7c80);
+      p.rect(3, 14, 10, 2, 0x5c5c60);
+      p.line(5, 6, 10, 9, 0xd04878);
+    },
+  },
+  // Shaded concrete under the overpass, with a tent and a fire barrel version.
+  { ch: 'U', draw: shade },
+  { ch: '2', solid: true, draw: (p) => tent(p, shade) },
+  { ch: '3', solid: true, draw: (p) => fireBarrel(p, shade) },
+  // Cardboard beds and junk under the overpass. Drifters live here.
+  {
+    ch: '1', enc: true, draw: (p) => {
+      p.rect(0, 0, 16, 16, 0x48484e);
+      p.speckle(0, 0, 16, 16, 0x3c3c42, 0.18, 91);
+      p.rect(1, 2, 9, 6, 0x8c7050);
+      p.rect(1, 2, 9, 1, 0x705838);
+      p.rect(7, 9, 8, 5, 0x7c6448);
+      p.rect(8, 10, 3, 1, 0x5c4830);
+      p.set(3, 12, 0xd04040);
+      p.set(13, 4, 0x60a0d0);
     },
   },
 ];

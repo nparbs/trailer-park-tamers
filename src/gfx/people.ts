@@ -119,4 +119,10 @@ export const WALKERS: Record<string, WalkerLook> = {
   kid: { skin: 0xa86c40, hair: 0x202020, top: 0xe0c040, pants: 0x4c6cb0 },
   preacher: { skin: 0x6c4428, hair: 0x302820, top: 0x302830, pants: 0x282830, beard: 0x302820 },
   skater: { skin: 0xf0c8a0, hair: 0x60c0e0, top: 0x303030, pants: 0x8c8c6c },
+  slumlord: { skin: 0xe0b088, hair: 0x5c5c5c, top: 0x8c6c3c, pants: 0x5c4c34, shoes: 0x3c2c1c, beard: 0x5c5c5c },
+  super: { skin: 0xc8946c, hair: 0x302820, hat: 0x3c5c8c, top: 0x5c6c7c, pants: 0x3c3c48, beard: 0x302820 },
+  juggalo: { skin: 0xf0f0f0, hair: 0x202020, top: 0x3c3c3c, pants: 0x2c2c48 },
+  tattoo: { skin: 0xf0c8a0, hair: 0x40c060, top: 0x202020, pants: 0x303040, beard: 0x40c060 },
+  nurse: { skin: 0xa86c40, hair: 0x302020, top: 0xe8e8f0, pants: 0xe8e8f0 },
+  clerk2: { skin: 0xc8946c, hair: 0x202020, hat: 0xe8e8e8, top: 0xe8e8e8, pants: 0x3c3c48, beard: 0x202020 },
 };

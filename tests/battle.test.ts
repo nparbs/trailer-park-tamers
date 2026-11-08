@@ -112,3 +112,32 @@ describe('battle', () => {
     expect(se.dmg).toBeGreaterThan(nve.dmg * 2);
   });
 });
+
+describe('held items', () => {
+  it('a hip flask heals a quarter once, then is gone', () => {
+    const me = makeDrifter('TANK', 20, seeded(3));
+    me.held = 'FLASK';
+    me.moves = [{ id: 'TOUGH_IT_OUT', pp: 20 }];
+    const foe = makeDrifter('HANDLEMO', 40, seeded(4));
+    foe.moves = [{ id: 'SHOVE', pp: 35 }];
+    const b = new Battle({ player: [me], enemy: [foe], wild: true, rng: seeded(5) });
+    let pulled = 0;
+    for (let i = 0; i < 20 && !b.over; i++) {
+      const ev = b.runTurn({ kind: 'move', slot: 0 });
+      pulled += ev.filter((e) => e.t === 'msg' && e.text.includes('HIP FLASK')).length;
+    }
+    expect(pulled).toBe(1);
+    expect(me.held).toBeUndefined();
+  });
+
+  it('a shiv makes the same hit land 20% harder', () => {
+    const hit = (held?: 'SHIV') => {
+      const me = makeDrifter('SARGE', 20, seeded(7));
+      me.held = held;
+      const foe = makeDrifter('TANK', 20, seeded(8));
+      const b = new Battle({ player: [me], enemy: [foe], wild: true, rng: () => 0.5 });
+      return b.calcDamage('player', 'enemy', MOVES.HEADBUTT, true).dmg;
+    };
+    expect(hit('SHIV')).toBe(Math.floor(hit() * 1.2));
+  });
+});

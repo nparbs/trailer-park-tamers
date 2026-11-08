@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { getMap, type MapDef, type NpcDef, type TrainerDef } from '../data/maps';
 import { item } from '../data/items';
 import { type SpeciesId } from '../data/species';
-import { makeDrifter, type Drifter } from '../game/creature';
+import { displayName, makeDrifter, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
 import { G, addItem, healParty, type Dir } from '../game/state';
 import { net } from '../net/client';
@@ -618,11 +618,19 @@ export class Overworld extends Phaser.Scene {
       const i = await pickFromParty(this, this.ui, { title: 'Choose a crew member.' });
       if (i < 0) return;
       const d = G.party[i];
-      const c = await this.ui.choose(['INFO', 'SWAP', 'CANCEL'], { cancel: true });
-      if (c === 0) await showSummary(this, this.ui, d);
-      else if (c === 1) {
+      const opts = d.held ? ['INFO', 'SWAP', 'TAKE ITEM', 'CANCEL'] : ['INFO', 'SWAP', 'CANCEL'];
+      const c = await this.ui.choose(opts, { cancel: true });
+      if (opts[c] === 'INFO') await showSummary(this, this.ui, d);
+      else if (opts[c] === 'SWAP') {
         const j = await pickFromParty(this, this.ui, { title: 'Swap with who?' });
         if (j >= 0 && j !== i) [G.party[i], G.party[j]] = [G.party[j], G.party[i]];
+      } else if (opts[c] === 'TAKE ITEM' && d.held) {
+        const it = d.held;
+        G.bag[it] = (G.bag[it] ?? 0) + 1;
+        delete d.held;
+        sfx('select');
+        await this.ui.say(`Took the ${item(it).name.toUpperCase()} from ${displayName(d)}.`);
+        this.ui.close();
       }
     }
   }

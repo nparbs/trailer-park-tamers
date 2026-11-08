@@ -112,6 +112,16 @@ export const MOVES = {
   SAWZALL: { name: 'Sawzall', type: 'SCRAP', power: 80, acc: 95, pp: 15, highCrit: true },
   RE_UP: { name: 'Re-Up', type: 'SLICK', power: 0, acc: 0, pp: 10, heal: 0.5 },
 
+  // The Bottoms
+  SQUAT: { name: 'Squat', type: 'TOUGH', power: 0, acc: 0, pp: 15, stat: { who: 'self', stat: 'def', stages: 2 }, text: 'Changed the locks. This is home now.' },
+  EVICT: { name: 'Eviction Notice', type: 'TOUGH', power: 80, acc: 95, pp: 10, text: 'Taped right to their forehead.' },
+  MOONSHINE: { name: 'Moonshine', type: 'BOOZE', power: 90, acc: 90, pp: 10, inflict: { status: 'wasted', chance: 30 }, text: 'Blindingly strong. Possibly literally.' },
+  NO_CONSENT: { name: 'I Do Not Consent', type: 'PSYCHO', power: 0, acc: 0, pp: 15, stat: { who: 'self', stat: 'def', stages: 2 }, text: '"I am TRAVELING, not FIGHTING."' },
+  FAYGO: { name: 'Faygo Spray', type: 'PSYCHO', power: 60, acc: 100, pp: 20, stat: { who: 'foe', stat: 'acc', stages: -1, chance: 30 } },
+  COPPER_STRIP: { name: 'Copper Strip', type: 'SCRAP', power: 70, acc: 95, pp: 15, drain: 0.25, text: 'Ripped the wiring right out of the wall.' },
+  TROLL_TOLL: { name: 'Troll Toll', type: 'FERAL', power: 65, acc: 100, pp: 15, stat: { who: 'foe', stat: 'spd', stages: -1, chance: 50 }, text: '"Gotta pay the troll toll!"' },
+  PORCH_GRAB: { name: 'Porch Grab', type: 'SLICK', power: 55, acc: 100, pp: 20, priority: 1 },
+
   // Taught by tutors (src/data/tutors.ts), not learned by levelling.
   BONG_CLEAR: { name: 'Bong Clear', type: 'CHEM', power: 70, acc: 95, pp: 15, inflict: { status: 'out', chance: 20 }, text: 'Cleared the whole bowl and coughed it in their face.' },
   COUCH_LOCK: { name: 'Couch Lock', type: 'CHEM', power: 0, acc: 90, pp: 20, stat: { who: 'foe', stat: 'spd', stages: -2 }, text: "They sank into the cushions. They live there now." },

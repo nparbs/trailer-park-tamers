@@ -34,13 +34,14 @@ The on-screen pad only appears on touch screens. In portrait it sits under the g
 
 ## What's in it
 
-- Pine Acres Trailer Park, Rail Yard Road and the town of Grimsby, with seven interiors
-- 46 drifters across 10 types (Street, Booze, Chem, Psycho, Tough, Slick, Holy, Feral, Scrap, Strapped), with two- and three-stage evolutions
+- Pine Acres Trailer Park, Rail Yard Road, the town of Grimsby and The Bottoms, with a dozen interiors
+- 58 drifters across 10 types (Street, Booze, Chem, Psycho, Tough, Slick, Holy, Feral, Scrap, Strapped), with two- and three-stage evolutions
 - Homeless encampments and dumpster lots, a dealer, a grow house where you grow joints, a meth lab trailer, and a skateboard
-- About 50 moves, status effects (Passed Out, Sick, Wasted), stat stages, crits, STAB and type matchups
+- About 100 moves with an animation per type, status effects (Passed Out, Sick, Wasted), stat stages, crits, STAB and type matchups
 - Catching with three tiers of catch item, a party of six, and a storage unit
-- Trainers who spot you and walk over, a rival fight, and Big Tony's trap house as the first boss
-- Soup kitchen healing, the Gas-N-Go shop, StreetDex, crew info, bag, save/load in the browser
+- Trainers who spot you and walk over, two rival fights, Big Tony's trap house and Sal the slumlord as bosses
+- Move tutors for vice moves, held items, nicknames and a tattoo parlour that renames your crew
+- Soup kitchen and free clinic healing, shops, StreetDex, crew info, bag, two save slots
 - Synthesized chiptune music and sound effects
 
 See [ROADMAP.md](ROADMAP.md) for what comes next.
@@ -57,7 +58,7 @@ src/
   net/       protocol shared with the server, WebSocket client, cloud saves
   audio/     Web Audio synth for effects and music
 server/      Node server: static files, WebSocket world, PvP rooms, trades, SQLite accounts
-tests/       vitest: battle rules, PvP, catch odds, map validation
+tests/       vitest: battle rules, held items, PvP, catch odds, save slots, map validation
 scripts/     headless-Chrome screenshot and playthrough scripts (need `npm run dev`)
 ```
 

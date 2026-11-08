@@ -29,6 +29,13 @@ export interface GameState {
 }
 
 const KEY = 'tpt-save-v1';
+export type Slot = 1 | 2;
+/** The slot the current game saves into. */
+export let slot: Slot = 1;
+export function setSlot(s: Slot) {
+  slot = s;
+}
+const keyFor = (s: Slot) => (s === 2 ? KEY + '-s2' : KEY);
 
 export function newGame(): GameState {
   return {
@@ -61,9 +68,9 @@ export function setState(s: GameState) {
   G = s;
 }
 
-export function hasSave() {
+export function hasSave(s: Slot = slot) {
   try {
-    return !!localStorage.getItem(KEY);
+    return !!localStorage.getItem(keyFor(s));
   } catch {
     return false;
   }
@@ -71,20 +78,31 @@ export function hasSave() {
 
 export function save(): boolean {
   try {
-    localStorage.setItem(KEY, JSON.stringify(G));
+    localStorage.setItem(keyFor(slot), JSON.stringify(G));
     return true;
   } catch {
     return false;
   }
 }
 
-export function load(): boolean {
+export function load(s: Slot = slot): boolean {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(keyFor(s));
     if (!raw) return false;
     return loadFrom(JSON.parse(raw));
   } catch {
     return false;
+  }
+}
+
+/** The raw save in a slot on this browser, or null. */
+export function peekLocal(s: Slot): GameState | null {
+  try {
+    const raw = localStorage.getItem(keyFor(s));
+    const v = raw ? JSON.parse(raw) : null;
+    return v && v.version === 1 ? v : null;
+  } catch {
+    return null;
   }
 }
 

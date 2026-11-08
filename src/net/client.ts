@@ -40,6 +40,7 @@ class Net {
   online = 0;
   /** The save that was on the server when we connected. */
   serverSave: unknown | null = null;
+  serverSave2: unknown | null = null;
   refusedReason = '';
   /** Called after every (re)connect, so the overworld can re-announce where it is. */
   onReady: (() => void) | null = null;
@@ -128,6 +129,7 @@ class Net {
         this.outfit = m.outfit;
         this.online = m.online;
         this.serverSave = m.save;
+        this.serverSave2 = m.save2 ?? null;
         settle?.(true);
         this.onReady?.();
       } else if (m.t === 'refused') {

@@ -8,7 +8,7 @@ import {
   cleanChat, cleanName, cleanTeam, OUTFITS, PROTOCOL_VERSION,
   type ClientMsg, type PlayerInfo, type ServerMsg,
 } from '../src/net/protocol';
-import { normalizeToken, type Store } from './db';
+import { normalizeToken, type Slot, type Store } from './db';
 import { PvpRoom } from './pvp';
 import { TradeRoom } from './trade';
 
@@ -30,6 +30,8 @@ export class Client {
   busy = false;
   lastChat = 0;
   lastWho = 0;
+  /** Which save slot this player is playing, from their last save. */
+  slot: Slot = 1;
   /** Someone asked this player for a fight or trade. */
   incoming = new Map<string, { kind: 'battle' | 'trade'; team?: Drifter[]; at: number }>();
   pvp: PvpRoom | null = null;
@@ -81,6 +83,7 @@ export class World {
       case 'hello':
         return this.hello(c, m);
       case 'save':
+        c.slot = m.slot === 2 ? 2 : 1;
         return this.save(c, m.state);
       case 'enter':
         return this.enter(c, m.map, m.x, m.y, m.dir);
@@ -135,6 +138,7 @@ export class World {
       case 'tr_offer':
         return c.trade?.offer(c, m.index);
       case 'tr_confirm':
+        c.slot = m.slot === 2 ? 2 : 1;
         return c.trade?.confirm(c, m.state);
       case 'tr_cancel':
         return c.trade?.cancel(`${c.name} backed out.`);
@@ -171,13 +175,14 @@ export class World {
     c.name = acc.name;
     c.outfit = acc.outfit;
     this.byId.set(c.id, c);
-    let save: unknown = null;
-    try {
-      save = acc.save ? JSON.parse(acc.save) : null;
-    } catch {
-      save = null;
-    }
-    c.send({ t: 'welcome', id: c.id, token, name: c.name, outfit: c.outfit, save, online: this.online });
+    const parse = (j: string | null): unknown => {
+      try {
+        return j ? JSON.parse(j) : null;
+      } catch {
+        return null;
+      }
+    };
+    c.send({ t: 'welcome', id: c.id, token, name: c.name, outfit: c.outfit, save: parse(acc.save), save2: parse(acc.save2), online: this.online });
     this.broadcastOnline();
   }
 
@@ -187,7 +192,7 @@ export class World {
       c.send({ t: 'error', text: "Couldn't save: that save file looks wrong." });
       return;
     }
-    this.store.save(c.id, json);
+    this.store.save(c.id, json, c.slot);
     c.send({ t: 'saved' });
   }
 

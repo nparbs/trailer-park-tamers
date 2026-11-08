@@ -328,6 +328,81 @@ export const SPECIES = {
     look: { skin: 0xe0b088, hair: 0x5c4c3c, hairStyle: 'beanie', beard: 'stubble', top: 0x4c6c8c, topStyle: 'hoodie', pants: 0x3c3c3c, prop: 'saw' },
     dex: 'Can get under a Prius and back out in ninety seconds. Your car now sounds like a Harley.',
   },
+  // ---------- the Bottoms ----------
+  SID: {
+    name: 'Squatter Sid', types: ['STREET', 'TOUGH'], base: { hp: 60, atk: 55, def: 65, spd: 35 }, catchRate: 150, baseExp: 70,
+    learnset: [[1, 'SHOVE'], [1, 'SQUAT'], [10, 'HEADBUTT'], [14, 'CURB_STOMP'], [19, 'EVICT']],
+    evolves: { level: 24, into: 'ADVERSE' },
+    look: { skin: SKIN.ruddy, hair: 0x5c4030, hairStyle: 'beanie', beard: 'full', top: 0x7c6c4c, topStyle: 'coat', pants: 0x4c4c5c, prop: 'box' },
+    dex: 'Moved into a foreclosed house and put his name on the mailbox. Nobody has asked him to leave yet.',
+  },
+  ADVERSE: {
+    name: 'Adverse Possession Sid', types: ['STREET', 'SLICK'], base: { hp: 85, atk: 75, def: 90, spd: 45 }, catchRate: 45, baseExp: 165,
+    learnset: [[1, 'SQUAT'], [1, 'EVICT'], [24, 'FAST_TALK'], [30, 'BUM_RUSH']],
+    look: { skin: SKIN.ruddy, hair: 0x5c4030, hairStyle: 'short', beard: 'full', top: 0x3c3c5c, topStyle: 'sweater', pants: 0x3c3c48, prop: 'phone', big: true },
+    dex: 'Lived there long enough that it is legally his now. Charges the previous owner rent.',
+  },
+  MEL: {
+    name: 'Moonshine Mel', types: ['BOOZE', 'SCRAP'], base: { hp: 55, atk: 60, def: 50, spd: 40 }, catchRate: 140, baseExp: 68,
+    learnset: [[1, 'BOTTLE_SMASH'], [1, 'CAN_TOSS'], [9, 'BEER_BREATH'], [13, 'HUBCAP'], [18, 'MOONSHINE']],
+    evolves: { level: 26, into: 'SHINEKING' },
+    look: { skin: SKIN.ruddy, hair: 0xd8d8d0, hairStyle: 'cap', beard: 'long', top: 0x5c7c9c, topStyle: 'vest', pants: 0x3c4c6c, prop: 'bottle', nose: 0xe04040 },
+    dex: 'Runs a still out of a radiator. Each jar is labelled with a skull he drew himself.',
+  },
+  SHINEKING: {
+    name: 'Still King Mel', types: ['BOOZE', 'SCRAP'], base: { hp: 80, atk: 95, def: 70, spd: 45 }, catchRate: 45, baseExp: 170,
+    learnset: [[1, 'MOONSHINE'], [1, 'HUBCAP'], [26, 'RUSTY_PIPE'], [32, 'BENDER']],
+    look: { skin: SKIN.ruddy, hair: 0xe8e8e0, hairStyle: 'wild', beard: 'long', top: 0x3c5c7c, topStyle: 'vest', pants: 0x2c3c5c, prop: 'handle', nose: 0xf03030, big: true },
+    dex: 'Built a second still out of the first still. Revenue agents have stopped coming back.',
+  },
+  BENNY: {
+    name: 'Bootleg Benny', types: ['SLICK'], base: { hp: 50, atk: 55, def: 45, spd: 70 }, catchRate: 140, baseExp: 66,
+    learnset: [[1, 'PICKPOCKET'], [1, 'FAST_TALK'], [10, 'HUSTLE'], [15, 'THREE_CARD'], [21, 'SUCKER_PUNCH']],
+    look: { skin: SKIN.brown, hair: 0x202020, hairStyle: 'cap', top: 0x5c3c8c, topStyle: 'hoodie', pants: 0x3c3c3c, prop: 'box', shades: true },
+    dex: "Sells movies that aren't out yet. You can see the back of a man's head in every one.",
+  },
+  PAM: {
+    name: 'Porch Pirate Pam', types: ['SLICK', 'FERAL'], base: { hp: 50, atk: 60, def: 40, spd: 75 }, catchRate: 130, baseExp: 70,
+    learnset: [[1, 'PORCH_GRAB'], [1, 'SCRATCH'], [10, 'PICKPOCKET'], [14, 'BITE'], [20, 'SUCKER_PUNCH']],
+    look: { skin: SKIN.pale, hair: 0x8c3c2c, hairStyle: 'hood', top: 0x2c2c3c, topStyle: 'hoodie', pants: 0x3c3c4c, prop: 'box' },
+    dex: 'Follows the delivery truck on a bicycle. Has never once needed anything she took.',
+  },
+  STEVE: {
+    name: 'Sovereign Steve', types: ['PSYCHO', 'TOUGH'], base: { hp: 65, atk: 55, def: 70, spd: 45 }, catchRate: 110, baseExp: 78,
+    learnset: [[1, 'RANT'], [1, 'NO_CONSENT'], [11, 'STARE'], [15, 'HEADBUTT'], [22, 'CONSPIRACY']],
+    look: { skin: SKIN.pale, hair: 0x8c7c5c, hairStyle: 'short', beard: 'stubble', top: 0x7c8c4c, topStyle: 'army', pants: 0x4c4c3c, prop: 'sign' },
+    dex: 'Made his own license plate out of cardboard. Will explain maritime law to you until the cops give up.',
+  },
+  DWAYNE: {
+    name: 'Deacon Dwayne', types: ['HOLY', 'STRAPPED'], base: { hp: 65, atk: 65, def: 60, spd: 50 }, catchRate: 90, baseExp: 85,
+    learnset: [[1, 'BIBLE_THUMP'], [1, 'WARNING_SHOT'], [11, 'REPENT'], [16, 'PISTOL_WHIP'], [22, 'BRIMSTONE']],
+    look: { skin: SKIN.dark, hair: 0x202020, hairStyle: 'short', top: 0x2c2c3c, topStyle: 'coat', pants: 0x2c2c3c, prop: 'bible', shades: true },
+    dex: 'Head of church security. Passes the collection plate with one hand. The other hand is busy.',
+  },
+  JUGGALO: {
+    name: 'Juggalo Jeff', types: ['PSYCHO', 'BOOZE'], base: { hp: 55, atk: 65, def: 45, spd: 60 }, catchRate: 140, baseExp: 70,
+    learnset: [[1, 'SCREECH'], [1, 'FAYGO'], [10, 'BOTTLE_SMASH'], [15, 'RANT'], [21, 'MELTDOWN']],
+    look: { skin: 0xf0f0f0, hair: 0x202020, hairStyle: 'wild', top: 0x3c3c3c, topStyle: 'tee', pants: 0x2c2c48, prop: 'bottle', mouth: 0x202020, nose: 0x202020 },
+    dex: 'Whoop whoop. Paints his face every morning even when nobody is coming over. Nobody is ever coming over.',
+  },
+  DWIGHT: {
+    name: 'DUI Dwight', types: ['BOOZE', 'STREET'], base: { hp: 60, atk: 55, def: 55, spd: 65 }, catchRate: 150, baseExp: 66,
+    learnset: [[1, 'SHOVE'], [1, 'BEER_BREATH'], [10, 'BOTTLE_SMASH'], [14, 'CART_RAM'], [20, 'FORTY_SMASH']],
+    look: { skin: SKIN.tan, hair: 0x6c5c4c, hairStyle: 'helmet', beard: 'stubble', top: 0xc0c0c0, topStyle: 'tee', pants: 0x4c5c8c, nose: 0xd04040 },
+    dex: 'Lost his license in 2009. Rides a moped everywhere in a full-face helmet. Still gets pulled over.',
+  },
+  CLIFF: {
+    name: 'Copper Cliff', types: ['SCRAP', 'TOUGH'], base: { hp: 60, atk: 70, def: 65, spd: 40 }, catchRate: 110, baseExp: 80,
+    learnset: [[1, 'CAN_TOSS'], [1, 'HEADBUTT'], [10, 'COPPER_STRIP'], [16, 'TARP_UP'], [22, 'RUSTY_PIPE']],
+    look: { skin: SKIN.ruddy, hair: 0x3c3c3c, hairStyle: 'beanie', beard: 'full', top: 0xc87c3c, topStyle: 'vest', pants: 0x4c4c4c, prop: 'saw' },
+    dex: 'Has gutted every vacant house on the block. Can tell copper from aluminum by licking it.',
+  },
+  TRUDY: {
+    name: 'Troll Toll Trudy', types: ['FERAL', 'TOUGH'], base: { hp: 75, atk: 65, def: 60, spd: 35 }, catchRate: 90, baseExp: 82,
+    learnset: [[1, 'BITE'], [1, 'STARE'], [10, 'TROLL_TOLL'], [16, 'CHOKEHOLD'], [22, 'HAYMAKER']],
+    look: { skin: SKIN.grey, hair: 0x5c6c3c, hairStyle: 'wild', top: 0x4c5c3c, topStyle: 'coat', pants: 0x3c3c34, prop: 'bag', big: true },
+    dex: 'Lives under the overpass and charges anyone who walks through a dollar. She takes cigarettes.',
+  },
 } satisfies Record<string, SpeciesDef>;
 
 export type SpeciesId = keyof typeof SPECIES;

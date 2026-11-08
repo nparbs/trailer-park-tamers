@@ -358,6 +358,17 @@ const TRACKS: Record<string, Track> = {
       { wave: 'hat', vol: 0.03, notes: '. x . x . x . x . x . x . x . x . x . x . x . x . x . x . x . x' },
     ],
   },
+  // The Bottoms: slow, low, a little sour. E minor with a flat second.
+  bottoms: {
+    bpm: 88,
+    voices: [
+      { wave: 'triangle', vol: 0.26, notes: 'E2 . E2 E3 . E2 G2 . E2 . E2 E3 . F2 G2 F2 E2 . E2 E3 . E2 G2 . A2 . A2 G2 . F2 E2 D2 C2 . C2 C3 . C2 E2 . C2 . C2 C3 . D2 E2 D2 B1 . B1 B2 . B1 D#2 . B1 . B1 B2 . C2 D2 D#2' },
+      { wave: 'square', vol: 0.05, notes: '. . . . B4 - G4 - . . . . A4 G4 F4 - . . . . B4 - G4 - . . E5 - D5 - B4 - . . . . G4 - E4 - . . . . F4 E4 C4 - . . . . F#4 - D#4 - . . B4 - A4 - F#4 -' },
+      { wave: 'kick', vol: 0.4, notes: 'x . . . . . x . . . x . . . . . x . . . . . x . . . x . . . . .' },
+      { wave: 'snare', vol: 0.12, notes: '. . . . x . . . . . . . x . . . . . . . x . . . . . . . x . . x' },
+      { wave: 'hat', vol: 0.03, notes: 'x . x . x . x x x . x . x . x . x . x . x . x x x . x . x . x .' },
+    ],
+  },
   trainer: {
     bpm: 172,
     voices: [

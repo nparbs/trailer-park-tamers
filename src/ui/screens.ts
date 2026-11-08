@@ -170,7 +170,7 @@ export async function showSummary(scene: Phaser.Scene, ui: UI, d: Drifter) {
         l!.text(22, y, mv.name.toUpperCase().slice(0, 16));
         l!.text(164, y, `PP${String(m.pp).padStart(2)}/${mv.pp}`);
       });
-      l.text(12, 143, `EXP TO NEXT LV: ${next}`, 0x606068);
+      l.text(12, 143, d.held ? `HOLDING ${item(d.held).name.toUpperCase()}`.slice(0, 27) : `EXP TO NEXT LV: ${next}`, 0x606068);
     } else {
       l.panel(80, 42, 156, 46, 0xf8f8f0);
       l.text(90, 50, sp.name.toUpperCase().slice(0, 17));

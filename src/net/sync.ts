@@ -1,6 +1,6 @@
 // Saving: to the server when online (with a local backup), otherwise to this browser only.
 
-import { G, save as saveLocal } from '../game/state';
+import { G, save as saveLocal, slot } from '../game/state';
 import { net } from './client';
 
 let lastAuto = 0;
@@ -8,9 +8,11 @@ let lastAuto = 0;
 export function saveGame(): boolean {
   const local = saveLocal();
   if (net.isOnline) {
-    net.send({ t: 'save', state: G });
+    net.send(slot === 2 ? { t: 'save', state: G, slot: 2 } : { t: 'save', state: G });
     // Keep the copy CONTINUE uses in step with what the server now has.
-    net.serverSave = JSON.parse(JSON.stringify(G));
+    const copy = JSON.parse(JSON.stringify(G));
+    if (slot === 2) net.serverSave2 = copy;
+    else net.serverSave = copy;
     return true;
   }
   return local;
