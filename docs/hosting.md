@@ -15,19 +15,10 @@ Accounts and saves live in SQLite at `/data/tpt.db`, in the `tpt_data` Docker vo
 
 ## First-time setup on the VM
 
-1. **Clone the repo.** It's private, so the VM needs a read-only deploy key:
+1. **Clone the repo.** It's public, so plain HTTPS works:
 
    ```sh
-   ssh-keygen -t ed25519 -f ~/.ssh/tpt-github -N "" -C "tpt deploy key"
-   cat ~/.ssh/tpt-github.pub   # add this as a read-only deploy key on the GitHub repo
-   cat >> ~/.ssh/config <<'EOF'
-   Host github-tpt
-     HostName github.com
-     User git
-     IdentityFile ~/.ssh/tpt-github
-     IdentitiesOnly yes
-   EOF
-   git clone github-tpt:nparbs/trailer-park-tamers.git ~/trailer-park-tamers
+   git clone https://github.com/nparbs/trailer-park-tamers.git ~/trailer-park-tamers
    cd ~/trailer-park-tamers
    cp .env.example .env
    ```
