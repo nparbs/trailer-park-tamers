@@ -5,6 +5,7 @@ import Phaser from 'phaser';
 import { FONT, wrap } from '../gfx/font';
 import { Input } from '../game/input';
 import { sfx } from '../audio/sound';
+import { settings, TEXT_RATE } from '../game/settings';
 
 export const W = 240;
 export const H = 160;
@@ -129,7 +130,8 @@ class DialogBox implements Widget {
     const full = this.shown >= this.pageLen;
     if (!full) {
       this.fullFor = 0;
-      const speed = Input.held('a') || Input.held('b') ? 4 : 1.5;
+      const [normal, fast] = TEXT_RATE[settings.text];
+      const speed = Input.held('a') || Input.held('b') ? fast : normal;
       const before = Math.floor(this.shown);
       this.shown = Math.min(this.pageLen, this.shown + speed * (dt / 16.7));
       if (Math.floor(this.shown) > before && Math.floor(this.shown) % 3 === 0) sfx('blip');

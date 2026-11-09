@@ -24,7 +24,7 @@ async function jump(map, x, y, party, extra = {}) {
   }, { map, x, y, party, extra });
   await wait(900);
 }
-await page.goto('http://localhost:5173/');
+await page.goto(process.env.URL ?? 'http://localhost:5173/');
 await wait(1500);
 
 // Big Tony.

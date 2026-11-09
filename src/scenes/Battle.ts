@@ -6,6 +6,8 @@ import { species } from '../data/species';
 import { Battle, type Action, type BattleEvent, type BattleResult, type Side } from '../game/battle';
 import { addExp, canEvolve, displayName, evolve, expForLevel, learnMove, maxHp, replaceMove, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
+import { settings } from '../game/settings';
+import { phase, PHASE_TINT } from '../game/time';
 import { G, markSeen, recruit } from '../game/state';
 import { moan, music, sfx } from '../audio/sound';
 import { FONT } from '../gfx/font';
@@ -76,7 +78,9 @@ export class BattleScene extends Phaser.Scene {
     const d = this.data_;
     this.ui = new UI(this);
     this.cameras.main.setBackgroundColor(0x000000);
-    this.add.image(0, 0, 'bg_' + d.bg).setOrigin(0, 0);
+    const bg = this.add.image(0, 0, 'bg_' + d.bg).setOrigin(0, 0);
+    // Outdoor fights happen under the same sky as the map.
+    if (d.bg !== 'indoor') bg.setTint(PHASE_TINT[phase()]);
     this.b = d.net
       ? new Battle({ player: d.net.myTeam, enemy: d.enemy, wild: false, trainerName: d.net.foeName, pvp: { player: G.name, enemy: d.net.foeName } })
       : new Battle({ player: G.party, enemy: d.enemy, wild: d.wild, trainerName: d.trainer?.name, bag: G.bag });
@@ -204,7 +208,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private say(text: string, auto = 1800) {
-    return this.ui.say(text, auto);
+    // Auto-advancing lines wait less when the text is fast.
+    const k = settings.text === 'fast' ? 0.55 : settings.text === 'slow' ? 1.25 : 1;
+    return this.ui.say(text, auto ? Math.round(auto * k) : 0);
   }
 
   // ---------- flow ----------
@@ -234,7 +240,10 @@ export class BattleScene extends Phaser.Scene {
         this.tween({ targets: this.enemySpr, x: EX, duration: 700, ease: 'Quad.out' }),
         this.tween({ targets: this.playerSpr, x: PX, duration: 700, ease: 'Quad.out' }),
       ]);
+      // Both crews as a row of sacks, like the handhelds.
+      const bars = [this.crewBar('enemy'), this.crewBar('player')];
       await this.say(`${tr.cls} ${tr.name} wants to fight!`.trim());
+      bars.forEach((b) => b.forEach((o) => o.destroy()));
       await this.tween({ targets: this.enemySpr, x: 300, duration: 400, ease: 'Quad.in' });
       await this.say(`${tr.name} sent out ${displayName(foe).toUpperCase()}!`);
       await this.sendOut('enemy', foe);
@@ -325,6 +334,40 @@ export class BattleScene extends Phaser.Scene {
         this.refreshBox(side, d);
       }
     }
+  }
+
+  /**
+   * A bar of six sacks for one side's crew: full for fighters still standing,
+   * faded for ones with a status, grey for knocked out, empty for no one.
+   */
+  private crewBar(side: Side): Phaser.GameObjects.GameObject[] {
+    const team = side === 'enemy' ? this.b.enemy : this.b.player;
+    const enemy = side === 'enemy';
+    const y = enemy ? 30 : 98;
+    const x0 = enemy ? 8 : 136;
+    const objs: Phaser.GameObjects.GameObject[] = [];
+    const g = this.add.graphics().setDepth(22);
+    g.fillStyle(0x282830).fillRect(enemy ? 0 : x0 - 6, y + 8, 104, 2);
+    g.fillStyle(0x787880).fillRect(enemy ? 0 : x0 - 6, y + 10, 104, 1);
+    objs.push(g);
+    for (let k = 0; k < 6; k++) {
+      const d = team[k];
+      const x = x0 + k * 15;
+      let o: Phaser.GameObjects.Image | Phaser.GameObjects.Arc;
+      if (!d) o = this.add.circle(x + 4, y + 4, 3, 0x404048).setStrokeStyle(1, 0x787880);
+      else {
+        o = this.add.image(x, y, 'sackIco').setOrigin(0, 0);
+        if (d.hp <= 0) o.setTint(0x606068);
+        else if (d.status) o.setTint(0xf0a070);
+      }
+      o.setDepth(23);
+      // Slide in from the near edge.
+      const tx = o.x;
+      o.x += enemy ? -110 : 110;
+      this.tweens.add({ targets: o, x: tx, duration: 260, delay: k * 30, ease: 'Quad.out' });
+      objs.push(o);
+    }
+    return objs;
   }
 
   private async sendOut(side: Side, d: Drifter) {
@@ -512,6 +555,12 @@ ${shortName(displayName(b.me).toUpperCase(), 13)}`, 13);
           if (this.data_.net) this.b.active[e.side] = e.index;
           const d = e.side === 'enemy' ? this.b.enemy[e.index] : this.b.player[e.index];
           if (e.side === 'enemy') markSeen(d.sp);
+          if (e.side === 'enemy' && !this.data_.wild) {
+            // How many they have left, before the next one comes out.
+            const bar = this.crewBar('enemy');
+            await this.ui.wait(700);
+            bar.forEach((o) => o.destroy());
+          }
           await this.sendOut(e.side, d);
           break;
         }
@@ -532,6 +581,10 @@ ${shortName(displayName(b.me).toUpperCase(), 13)}`, 13);
     const spr = side === 'enemy' ? this.enemySpr : this.playerSpr;
     const def = move(id);
     const x0 = spr.x;
+    if (!settings.anims) {
+      await this.ui.wait(150);
+      return;
+    }
     if (def.power > 0) {
       await this.tween({ targets: spr, x: x0 + (side === 'enemy' ? -14 : 14), duration: 90, yoyo: true, ease: 'Quad.out' });
       spr.setX(x0);

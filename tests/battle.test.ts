@@ -43,9 +43,9 @@ describe('creature', () => {
   });
 
   it('levels up and learns moves', () => {
-    const d = makeDrifter('WILLIE', 4, seeded());
-    const ups = addExp(d, expForLevel(5) - d.exp);
-    expect(d.level).toBe(5);
+    const d = makeDrifter('WILLIE', 5, seeded());
+    const ups = addExp(d, expForLevel(6) - d.exp);
+    expect(d.level).toBe(6);
     expect(ups[0].newMoves).toContain('BOTTLE_SMASH');
   });
 });

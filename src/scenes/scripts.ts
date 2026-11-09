@@ -8,6 +8,7 @@ import { pickFromParty, shop, storage } from '../ui/screens';
 import { askNickname } from '../ui/nickname';
 import { displayName } from '../game/creature';
 import type { Overworld, Walker } from './Overworld';
+import { rival2Team } from '../data/maps';
 import { tutor } from './tutor';
 
 type Script = (ow: Overworld, n?: Walker) => Promise<void>;
@@ -83,8 +84,22 @@ export const SCRIPTS: Record<string, Script> = {
       await daleGivesDex(ow);
       return;
     }
+    if (G.flags.badge1 && !G.bag.BOLT) {
+      await ui.talk(
+        "UNCLE DALE: You beat TONY?! I'm so proud I could cry. Or that's the gas leak again.",
+        "Here. Every businessman needs a good pair of BOLT CUTTERS. Don't ask me where the bikes went.",
+      );
+      sfx('levelup');
+      addItem('BOLT');
+      await ui.say(`${G.name} got the BOLT CUTTERS!`);
+      await ui.talk(
+        'UNCLE DALE: Half the fences in this county are held up with zip ties. Find a weak spot, walk up to it and press A.',
+        "Snip snip. Shortcuts, stashes, whatever's behind there. Finders keepers.",
+      );
+      return;
+    }
     if (G.flags.badge1) {
-      await ui.say("UNCLE DALE: You beat TONY?! I'm so proud I could cry. Or that's the gas leak again.");
+      await ui.say("UNCLE DALE: Still got them BOLT CUTTERS? Good. Them zip-tied fences ain't gonna cut themselves.");
       return;
     }
     await ui.say("UNCLE DALE: Go get 'em, kid. If you see Tony, tell him the forty bucks is in the mail.");
@@ -375,7 +390,7 @@ export const SCRIPTS: Record<string, Script> = {
     const mine = (['WILLIE', 'AMOS', 'PETE'] as SpeciesId[]).find((sp) => G.flags['starter_' + sp]) ?? 'WILLIE';
     const theirs = RIVAL_PICK[mine];
     const evo = (species(theirs).evolves?.into ?? theirs) as SpeciesId;
-    const team: [SpeciesId, number][] = [['MO', 14], ['KENNY', 15], [evo, 18]];
+    const team = rival2Team(evo);
     const result = await ow.battle({
       enemy: team.map(([sp, lv]) => makeDrifter(sp, lv)),
       wild: false,
@@ -422,8 +437,8 @@ export const SCRIPTS: Record<string, Script> = {
     await ui.talk(
       "BIG TONY: The GAS-N-GO'll sell you VAN KEYS now. Don't ask what the van is for. Everybody knows what the van is for.",
       "BIG TONY: And if you're looking for real trouble... the cops can't keep THE BOTTOMS taped off forever.",
+      "BIG TONY: Oh, and swing by your Uncle Dale's. He's been bragging to everybody about you. Using MY bolt cutters, probably.",
     );
-    await ui.say('Thanks for playing the first slice of TRAILER PARK TAMERS! Keep training your crew. More turf is coming.');
   },
 };
 

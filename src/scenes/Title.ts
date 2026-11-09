@@ -4,7 +4,8 @@ import { Input } from '../game/input';
 import { G, loadFrom, newGame, peekLocal, setSlot, setState, type GameState, type Slot } from '../game/state';
 import { net } from '../net/client';
 import { OUTFIT_LOOKS } from '../gfx/people';
-import { isMuted, music, sfx, toggleMute } from '../audio/sound';
+import { isMuted, music, sfx } from '../audio/sound';
+import { options } from '../ui/screens';
 import { UI } from '../ui/ui';
 
 export class Title extends Phaser.Scene {
@@ -79,17 +80,15 @@ export class Title extends Phaser.Scene {
     for (;;) {
       const saves = { 1: this.slotSave(1), 2: this.slotSave(2) } as Record<Slot, GameState | null>;
       const any = !!(saves[1] || saves[2]);
-      const opts = any ? ['CONTINUE', 'NEW GAME', 'USE CODE', 'SOUND'] : ['NEW GAME', 'USE CODE', 'SOUND'];
+      const opts = any ? ['CONTINUE', 'NEW GAME', 'USE CODE', 'OPTIONS'] : ['NEW GAME', 'USE CODE', 'OPTIONS'];
       const i = await this.ui.choose(opts, { x: 76, y: 88, w: 96 });
       const o = opts[i];
       if (o === 'USE CODE') {
         await this.useCode();
         continue;
       }
-      if (o === 'SOUND') {
-        const m = toggleMute();
-        await this.ui.say(m ? 'Sound is OFF.' : 'Sound is ON.');
-        this.ui.close();
+      if (o === 'OPTIONS') {
+        await options(this, this.ui);
         continue;
       }
       if (o === 'CONTINUE') {

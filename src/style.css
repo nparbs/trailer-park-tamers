@@ -48,8 +48,10 @@ html, body {
     #hud { top: calc(100vw * 2 / 3 + 8px + env(safe-area-inset-top)); }
     #chatlog { top: calc(100vw * 2 / 3 + 30px + env(safe-area-inset-top)); max-width: calc(100vw - 16px); }
   }
-  /* Landscape: game fills the screen, pad floats over the sides. */
+  /* Landscape: the pad gets its own gutters on each side, so it never covers the
+     text box or menus. CHAT and START move up into the right-hand gutter. */
   @media (orientation: landscape) {
+    #game { margin: 0 calc(136px + env(safe-area-inset-right)) 0 calc(136px + env(safe-area-inset-left)); }
     #pad {
       position: absolute;
       inset: 0;
@@ -57,8 +59,17 @@ html, body {
       padding: 12px calc(12px + env(safe-area-inset-right)) 12px calc(12px + env(safe-area-inset-left));
       align-items: flex-end;
     }
-    #pad button { pointer-events: auto; opacity: 0.55; }
-    .mid { bottom: 6px; }
+    #pad button { pointer-events: auto; opacity: 0.85; }
+    .mid {
+      left: auto;
+      right: calc(16px + env(safe-area-inset-right));
+      transform: none;
+      top: calc(40px + env(safe-area-inset-top));
+      bottom: auto;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+    }
   }
 }
 
@@ -224,4 +235,18 @@ html, body {
   #musicbtn { top: calc(100vw * 2 / 3 + 6px + env(safe-area-inset-top)); }
   #chatlog { top: calc(100vw * 2 / 3 + 30px + env(safe-area-inset-top)); }
   #who { top: calc(100vw * 2 / 3 + 30px + env(safe-area-inset-top)); }
+}
+
+/* Phones held sideways: a slightly smaller pad, so its gutters cost the game less room.
+   Last in the file so it wins over the base pad sizes above. */
+@media (pointer: coarse) and (orientation: landscape) {
+  .dpad { width: 120px; height: 120px; }
+  .dpad .d { width: 40px; height: 40px; }
+  .dpad .up { left: 40px; top: 0; }
+  .dpad .down { left: 40px; top: 80px; }
+  .dpad .left { left: 0; top: 40px; }
+  .dpad .right { left: 80px; top: 40px; }
+  .dpad .hub { left: 40px; top: 40px; }
+  .ab { width: 116px; height: 104px; }
+  .round { width: 54px; height: 54px; }
 }

@@ -114,6 +114,17 @@ function sack() {
   return p;
 }
 
+/** A tiny sack for the crew-count bar at the start of a trainer fight. */
+function sackIcon() {
+  const p = new Pix(8, 8);
+  p.oval(1, 2, 6, 6, 0xd8b078);
+  p.rect(3, 0, 2, 3, 0xd8b078);
+  p.rect(2, 2, 4, 1, 0x8c6034);
+  p.set(2, 4, 0xf0d098);
+  p.outline(0x282830);
+  return p;
+}
+
 function alertBubble() {
   const p = new Pix(10, 12);
   p.rect(0, 0, 10, 10, 0xf8f8f8);
@@ -142,6 +153,21 @@ function shadow() {
   return p;
 }
 
+/** A soft round light for lampposts and fire barrels at night. */
+function glow(size = 64) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const c = cv.getContext('2d')!;
+  const r = size / 2;
+  const grad = c.createRadialGradient(r, r, 0, r, r, r);
+  grad.addColorStop(0, 'rgba(255,220,150,0.55)');
+  grad.addColorStop(0.45, 'rgba(255,190,110,0.22)');
+  grad.addColorStop(1, 'rgba(255,170,90,0)');
+  c.fillStyle = grad;
+  c.fillRect(0, 0, size, size);
+  return cv;
+}
+
 export function buildTextures(scene: Phaser.Scene) {
   scene.textures.addCanvas('tiles-out', buildTileset(OUTDOOR));
   scene.textures.addCanvas('tiles-in', buildTileset(INDOOR));
@@ -165,6 +191,8 @@ export function buildTextures(scene: Phaser.Scene) {
   scene.textures.addCanvas('item', itemBall().toCanvas());
   scene.textures.addCanvas('sack', sack().toCanvas());
   scene.textures.addCanvas('alert', alertBubble().toCanvas());
+  scene.textures.addCanvas('sackIco', sackIcon().toCanvas());
+  scene.textures.addCanvas('glow', glow());
   scene.textures.addCanvas('weeds', weedOverlay().toCanvas());
   scene.textures.addCanvas('shadow', shadow().toCanvas());
 }

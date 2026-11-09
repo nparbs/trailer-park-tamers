@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { buildFont } from './gfx/font';
 import { buildTextures } from './gfx/textures';
 import { Input, installInput } from './game/input';
-import { resumeMusic, unlockAudio } from './audio/sound';
+import { audioRunning, resumeMusic, unlockAudio } from './audio/sound';
 import { Title } from './scenes/Title';
 import { Intro } from './scenes/Intro';
 import { installChat } from './ui/chat';
@@ -23,16 +23,21 @@ class Boot extends Phaser.Scene {
 installInput();
 installChat();
 
-// Audio can only start after the first tap or key press.
-let unlocked = false;
+// Audio can only start after a tap or key press. Keep listening: phones suspend audio
+// when the screen locks or another app takes over, and the next tap has to wake it.
+let started = false;
 const unlock = () => {
-  if (unlocked) return;
-  unlocked = true;
+  const wasRunning = audioRunning();
   unlockAudio();
-  resumeMusic();
+  if (!started || !wasRunning) {
+    started = true;
+    resumeMusic();
+  }
 };
-window.addEventListener('keydown', unlock);
-window.addEventListener('pointerdown', unlock);
+for (const ev of ['keydown', 'pointerdown', 'touchend'] as const) window.addEventListener(ev, unlock, { passive: true });
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && started) unlockAudio();
+});
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

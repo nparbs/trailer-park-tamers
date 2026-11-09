@@ -25,6 +25,7 @@ export const ITEMS = {
   PILLS: { name: 'Bootleg Pills', kind: 'heal', price: 700, heal: 9999, desc: 'Fully restores HP. Pressed in a garage. Probably fine.' },
   SEED: { name: 'Bag Seed', kind: 'seed', price: 150, desc: 'Plant it in a pot at the grow house. Harvest JOINTS later.' },
   SKATEBOARD: { name: 'Skateboard', kind: 'key', price: 1000, desc: 'Use it, or press SELECT/Shift, to skate around twice as fast.' },
+  BOLT: { name: 'Bolt Cutters', kind: 'key', price: 0, desc: "Uncle Dale's. Face a zip-tied weak spot in a fence and press A to cut through." },
   // Held items: give one to a crew member and it works on its own in fights.
   SCRATCHER: { name: 'Lucky Scratcher', kind: 'held', price: 1200, desc: 'Held: doubles the odds of a critical hit. Not a winner yet, but due.' },
   FLASK: { name: 'Hip Flask', kind: 'held', price: 800, desc: 'Held: under half HP, they take a pull and heal a quarter. One use.' },

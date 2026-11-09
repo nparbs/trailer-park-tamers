@@ -26,6 +26,8 @@ export interface GameState {
   playMs: number;
   /** Grow house pots: play time (ms) when a seed went in. */
   grow: Record<string, number>;
+  /** Trash piles already dug through: the day number they were searched. */
+  scav: Record<string, number>;
 }
 
 const KEY = 'tpt-save-v1';
@@ -58,6 +60,7 @@ export function newGame(): GameState {
     caught: [],
     playMs: 0,
     grow: {},
+    scav: {},
   };
 }
 

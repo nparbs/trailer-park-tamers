@@ -91,17 +91,18 @@ The taped-off road east of Grimsby opens up once you beat Big Tony.
 - [x] Move animations by type (bottle lob, chem bubbles, psycho rings, holy beam, claw marks, gunshot tracer and so on), plus glows for buffs and heals
 - [ ] The bridge east of the Bottoms is a "ROAD CLOSED" sign for now
 
-## v0.6: Polish pass
+## v0.6: Polish pass ✅
 
-- [ ] Ledges you can hop down, and cut-through fences that need a "bolt cutters" field move
-- [ ] Overworld items hidden in trash piles (press A on them)
-- [ ] Text speed and battle animation settings
-- [ ] Party order in battle shown like the handhelds (lead slot on the left)
-- [ ] Show the trainer's remaining crew as icons before each fight
-- [ ] Better weeds: rustle animation and a sound when you walk through
-- [ ] Day and night tint, with some drifters only out at night
-- [ ] Balance pass on early-game levels, prize money and catch rates
-- [ ] Playtest on a phone: button sizes, landscape overlap, audio unlock
+- [x] Ledges you can hop down on Rail Yard Road; zip-tied weak spots in fences that BOLT CUTTERS go through (Uncle Dale hands them over after Big Tony). Four fenced-off nooks with items: the park, Rail Yard Road, Tent City and the Bottoms vacant lot
+- [x] Trash piles, dumpsters and bins: press A to dig. Some hide an item for good, and any of them can turn up junk once a day
+- [x] OPTIONS in the start menu and on the title screen: text speed, battle effects on/off, music, sound
+- [x] Crew screen laid out like the handhelds: the lead in a big panel on the left, the rest on the right, CANCEL below. Storage scrolls now instead of running off the screen
+- [x] Both crews shown as a row of sacks before a trainer fight, and the trainer's again before each new fighter
+- [x] Bits of cardboard and cans kick up, with a crinkle, when anyone walks through a camp
+- [x] Morning, evening and night tints from the player's clock, with lit lampposts, fire barrels and windows after dark. Night-only drifters: Tinfoil Terry and Lab Coat Larry on Rail Yard Road, Three-Card Marv in Tent City, Lookout Lenny in the dumpster lot, Juggalo Jeff under the overpass. Sign Guy Gary and Busker Bev go home at night. Add `?hour=22` to the address to try it
+- [x] Balance pass with a new simulator (`npm run balance`): starters learn their type move at 6 so the first rival fight is fair, each starter gets a mid-power move around 14-15 (new HOLY move: Holy Water), and Big Tony, Kyle, Lab Larry and rival fight #2 are easier. Prize money and catch rates checked and left alone
+- [x] Phone check (emulated, not on a real device): in landscape the pad has its own gutters so it never covers the text box, CHAT/START moved to the right side, and audio wakes back up after the phone locks or switches apps
+- [ ] Try it on a real phone, especially iOS audio
 
 ## v0.7: The rest of the map
 

@@ -13,6 +13,7 @@ npm install
 npm run server     # game server on :8790 (accounts in data/tpt.db)
 npm run dev        # http://localhost:5173, forwards /ws to the server; also reachable from your phone
 npm test           # rules, data, map and PvP checks
+npm run balance    # plays the story fights many times and prints win rates per fight
 npm run build      # static site in dist/
 ```
 
@@ -29,6 +30,7 @@ Hosting on the Debian VM is in [docs/hosting.md](docs/hosting.md).
 | Chat | T or / | CHAT |
 | Music on/off | M, or the note button top left | Note button |
 | Who's online | Click the online counter | Tap the online counter |
+| Options (text speed, battle effects, sound) | Start menu or title screen | Same |
 
 The on-screen pad only appears on touch screens. In portrait it sits under the game like a handheld; in landscape it floats over the sides.
 
@@ -41,6 +43,8 @@ The on-screen pad only appears on touch screens. In portrait it sits under the g
 - Catching with three tiers of catch item, a party of six, and a storage unit
 - Trainers who spot you and walk over, two rival fights, Big Tony's trap house and Sal the slumlord as bosses
 - Move tutors for vice moves, held items, nicknames and a tattoo parlour that renames your crew
+- Morning, evening and night from your own clock, with drifters that only come out after dark
+- Ledges to hop down, zip-tied fences to cut with BOLT CUTTERS, and trash piles to dig through
 - Soup kitchen and free clinic healing, shops, StreetDex, crew info, bag, two save slots
 - Synthesized chiptune music and sound effects
 
@@ -72,8 +76,8 @@ With the dev server running:
 node scripts/play.mjs        # new game through the rival fight, route, a wild fight and a trainer
 node scripts/endgame.mjs     # boss, healing, shop, blackout
 node scripts/screenshots.mjs # title, every map, battle, menus, sprite sheets
-node scripts/mobile.mjs      # touch layout at phone sizes
+node scripts/mobile.mjs      # touch layout at phone sizes, with a text box open
 node scripts/mp.mjs          # two players: presence, chat, a fight, a trade (needs `npm run server` too)
 ```
 
-Screenshots land in `shots/` (ignored by git). The scripts use the Chrome install at `C:/Program Files/Google/Chrome/Application/chrome.exe`; set `CHROME` to point elsewhere.
+Screenshots land in `shots/` (ignored by git). The scripts use the Chrome install at `C:/Program Files/Google/Chrome/Application/chrome.exe`; set `CHROME` to point elsewhere, and `URL` if the dev server is not on http://localhost:5173/.

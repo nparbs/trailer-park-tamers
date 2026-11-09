@@ -8,7 +8,7 @@ export interface TileDef {
   solid?: boolean;
   /** Random encounters happen here. */
   enc?: boolean;
-  /** Ledge-like tiles you can only walk onto going down. */
+  /** A drop-off: walking south from above hops over it and lands on the tile below. Otherwise it blocks. */
   ledge?: boolean;
   draw: (p: Pix) => void;
 }
@@ -121,6 +121,18 @@ function woodWall(p: Pix, base: number) {
   p.rect(0, 14, 16, 2, darken(base, 0.55));
 }
 
+function chainLink(p: Pix) {
+  grass(p);
+  p.rect(0, 3, 16, 1, 0x707078);
+  p.rect(0, 13, 16, 1, 0x707078);
+  for (let i = -8; i < 16; i += 3) {
+    p.line(i, 13, i + 9, 4, 0xa8a8b0);
+    p.line(i + 9, 13, i, 4, 0x8c8c94);
+  }
+  p.rect(1, 2, 2, 13, 0x606068);
+  p.rect(1, 2, 1, 13, 0x8c8c94);
+}
+
 function tent(p: Pix, ground: (p: Pix) => void) {
   ground(p);
   p.trap(2, 12, 7, 8, 0, 15, 0x3c70c0);
@@ -216,17 +228,38 @@ export const OUTDOOR: TileDef[] = [
     },
   },
   { ch: 'b', solid: true, draw: (p) => { grass(p); canopy(p, 1, 4, 14, 11, 0x4c9038); } },
+  { ch: '#', solid: true, draw: (p) => chainLink(p) },
   {
-    ch: '#', solid: true, draw: (p) => {
+    // A grassy drop-off. You can hop down it (walking south) but never climb back up.
+    ch: '4', ledge: true, draw: (p) => {
       grass(p);
-      p.rect(0, 3, 16, 1, 0x707078);
-      p.rect(0, 13, 16, 1, 0x707078);
-      for (let i = -8; i < 16; i += 3) {
-        p.line(i, 13, i + 9, 4, 0xa8a8b0);
-        p.line(i + 9, 13, i, 4, 0x8c8c94);
-      }
-      p.rect(1, 2, 2, 13, 0x606068);
-      p.rect(1, 2, 1, 13, 0x8c8c94);
+      p.rect(0, 9, 16, 2, C.grassD);
+      p.rect(0, 11, 16, 4, C.dirtD);
+      p.rect(0, 11, 16, 1, C.dirt);
+      for (let x = 1; x < 16; x += 5) p.rect(x, 12, 2, 1, C.dirt);
+      p.rect(0, 15, 16, 1, darken(C.dirtD, 0.7));
+    },
+  },
+  {
+    // Chain-link with a zip-tied weak spot. BOLT CUTTERS go through it.
+    ch: '5', solid: true, draw: (p) => {
+      chainLink(p);
+      p.rect(5, 5, 6, 7, 0x8c8c94);
+      for (const y of [5, 8, 11]) p.rect(4, y, 8, 1, 0x282830);
+      p.set(12, 5, 0xd04040);
+      p.set(12, 8, 0xd04040);
+      p.set(12, 11, 0xd04040);
+    },
+  },
+  {
+    // The same fence after the BOLT CUTTERS: a flap peeled back.
+    ch: '6', draw: (p) => {
+      chainLink(p);
+      p.rect(4, 4, 8, 10, C.grass);
+      p.speckle(4, 4, 8, 10, C.grassD, 0.12, 5);
+      p.line(4, 4, 1, 9, 0xa8a8b0);
+      p.line(11, 4, 14, 9, 0xa8a8b0);
+      p.set(3, 13, 0xd04040);
     },
   },
   {

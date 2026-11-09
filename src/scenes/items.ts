@@ -12,6 +12,10 @@ export async function useItemOutside(ow: Overworld, id: ItemId) {
     await ow.ui.say("You can't just bag somebody in broad daylight. Wear them down in a fight first.");
     return;
   }
+  if (id === 'BOLT') {
+    await ow.ui.say('Walk up to a weak spot in a chain-link fence (the zip-tied part) and press A.');
+    return;
+  }
   if (def.kind === 'key') {
     ow.toggleSkate();
     return;

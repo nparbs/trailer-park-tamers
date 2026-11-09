@@ -98,7 +98,7 @@ async function goto(tx, ty, opts = {}) {
 }
 async function face(dir) { await press(KEYS[dir], 30); await wait(120); }
 
-await page.goto('http://localhost:5173/');
+await page.goto(process.env.URL ?? 'http://localhost:5173/');
 await page.evaluate(() => localStorage.clear());
 await page.reload();
 await wait(1500);

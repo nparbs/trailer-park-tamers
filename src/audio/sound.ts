@@ -30,13 +30,31 @@ function ac() {
     sfxBus.gain.value = 0.5;
     sfxBus.connect(master);
   }
-  if (ctx.state === 'suspended') ctx.resume();
+  // iOS also reports 'interrupted' after a phone call or switching apps.
+  if (ctx.state !== 'running') void ctx.resume().catch(() => {});
   return ctx;
 }
 
-/** Browsers only allow audio after a user gesture; call this from input handlers. */
+/**
+ * Browsers only allow audio after a user gesture; call this from input handlers.
+ * Safe to call on every tap. Playing a silent sample inside the gesture is what
+ * finally wakes audio up on older iPhones.
+ */
 export function unlockAudio() {
-  ac();
+  const c = ac();
+  if (!c || c.state === 'running') return;
+  try {
+    const src = c.createBufferSource();
+    src.buffer = c.createBuffer(1, 1, 22050);
+    src.connect(c.destination);
+    src.start(0);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function audioRunning() {
+  return ctx?.state === 'running';
 }
 
 export function toggleMute() {
@@ -117,7 +135,8 @@ function freqOf(n: string) {
 
 export type Sfx =
   | 'blip' | 'select' | 'move' | 'back' | 'bump' | 'door' | 'hit' | 'superhit' | 'weakhit' | 'faint' | 'shake'
-  | 'caught' | 'levelup' | 'heal' | 'encounter' | 'exp' | 'throw' | 'statup' | 'statdown' | 'alert' | 'save' | 'buy';
+  | 'caught' | 'levelup' | 'heal' | 'encounter' | 'exp' | 'throw' | 'statup' | 'statdown' | 'alert' | 'save' | 'buy'
+  | 'rustle' | 'hop' | 'snip' | 'dig';
 
 export function sfx(name: Sfx) {
   const c = ac();
@@ -147,6 +166,11 @@ export function sfx(name: Sfx) {
     case 'alert': tone(1500, t, 0.08, 'square', 0.15, b); tone(1500, t + 0.1, 0.12, 'square', 0.15, b); break;
     case 'save': ['E5', 'G5', 'C6'].forEach((n, i) => tone(freqOf(n), t + i * 0.1, 0.12, 'triangle', 0.3, b)); break;
     case 'buy': tone(1800, t, 0.05, 'square', 0.1, b); tone(2400, t + 0.06, 0.12, 'square', 0.1, b); break;
+    // Stepping through camp litter: two quick crinkles.
+    case 'rustle': noise(t, 0.05, 0.09, b, 3200); noise(t + 0.06, 0.04, 0.06, b, 4200); break;
+    case 'hop': tone(300, t, 0.12, 'square', 0.1, b, 700); noise(t + 0.34, 0.06, 0.15, b, 500); break;
+    case 'snip': noise(t, 0.03, 0.3, b, 5000); tone(2200, t, 0.03, 'square', 0.08, b); noise(t + 0.12, 0.04, 0.3, b, 5000); break;
+    case 'dig': for (let i = 0; i < 3; i++) noise(t + i * 0.11, 0.07, 0.18, b, 1500 + i * 600); break;
   }
 }
 

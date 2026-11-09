@@ -7,7 +7,7 @@ async function player(name, outfit, x, y, facing, party) {
   const ctx = await browser.newContext({ viewport: { width: 720, height: 480 } });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(name + ': ' + String(e.stack || e)));
-  await page.goto('http://localhost:5173/');
+  await page.goto(process.env.URL ?? 'http://localhost:5173/');
   await page.waitForTimeout(1500);
   await page.evaluate(async ({ name, outfit, x, y, facing, party }) => {
     const { state, creature, game, net } = window.tpt;

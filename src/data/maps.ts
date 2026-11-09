@@ -51,9 +51,17 @@ export interface Trigger {
   when?: (f: Record<string, boolean>) => boolean;
 }
 
+export type EncTime = 'day' | 'night';
+
 export interface Encounters {
   rate: number;
-  table: [SpeciesId, number, number, number][]; // species, min level, max level, weight
+  /** species, min level, max level, weight, and optionally only by day or only at night */
+  table: [SpeciesId, number, number, number, EncTime?][];
+}
+
+/** The rows of an encounter table that can show up right now. */
+export function encountersFor(enc: Encounters, night: boolean) {
+  return enc.table.filter((r) => !r[4] || (r[4] === 'night') === night);
 }
 
 export interface MapDef {
@@ -71,6 +79,8 @@ export interface MapDef {
   enc?: Encounters;
   /** A second encounter table for certain areas of the map (x0,y0,x1,y1 inclusive). */
   enc2?: { area: [number, number, number, number]; enc: Encounters };
+  /** Items buried in trash piles, dumpsters and bins. Press A facing the spot. */
+  hidden?: { x: number; y: number; item: ItemId; n?: number }[];
   /** Heals and respawns here count as this map's "last safe place". */
   respawn?: { map: string; x: number; y: number };
 }
@@ -79,7 +89,9 @@ const ROUTE1_ENC: Encounters = {
   rate: 0.1,
   table: [
     ['JOE', 2, 4, 25],
-    ['GARY', 2, 4, 20],
+    ['GARY', 2, 4, 20, 'day'],
+    ['TERRY', 3, 5, 12, 'night'],
+    ['LARRY', 4, 5, 3, 'night'],
     ['MO', 2, 4, 15],
     ['PAT', 3, 4, 12],
     ['KENNY', 3, 4, 10],
@@ -97,7 +109,8 @@ const CAMP_ENC: Encounters = {
     ['CAROL', 5, 7, 12],
     ['LISA', 5, 7, 12],
     ['NED', 5, 7, 12],
-    ['BEV', 5, 7, 10],
+    ['BEV', 5, 7, 10, 'day'],
+    ['MARV', 6, 8, 10, 'night'],
     ['MO', 5, 7, 10],
     ['TERRY', 6, 8, 8],
     ['BETTY', 7, 8, 6],
@@ -117,6 +130,7 @@ const LOT_ENC: Encounters = {
     ['PHYLLIS', 7, 8, 6],
     ['SARGE', 7, 8, 4],
     ['GLEN', 7, 8, 4],
+    ['LENNY', 7, 8, 9, 'night'],
   ],
 };
 
@@ -126,7 +140,7 @@ const UNDERPASS_ENC: Encounters = {
     ['SID', 10, 12, 15],
     ['CLIFF', 10, 13, 12],
     ['MEL', 10, 12, 12],
-    ['JUGGALO', 10, 13, 12],
+    ['JUGGALO', 10, 13, 16, 'night'],
     ['PAM', 10, 12, 12],
     ['TRUDY', 11, 13, 10],
     ['STEVE', 11, 13, 10],
@@ -146,6 +160,7 @@ const LOT2_ENC: Encounters = {
     ['LISA', 10, 12, 10],
     ['DWAYNE', 11, 13, 8],
     ['MEL', 11, 13, 6],
+    ['TERRY', 11, 13, 8, 'night'],
   ],
 };
 
@@ -195,9 +210,9 @@ export const MAPS: Record<string, MapDef> = {
       'T.QQQQQ.::..RRRRR..%%..T',
       'T.yYeYy.::..wWdWw..%F..T',
       'T.o.....::.....c.......T',
-      'T.qp....::...P..QQQQQ..T',
-      'T.......::......yYeYy..T',
-      'T.......::.....,.......T',
+      'T#qp....::...P..QQQQQ..T',
+      'T..#....::......yYeYy..T',
+      'T..5....::.....,.......T',
       'TTTTTTTTTTTTTTTTTTTTTTTT',
     ],
     warps: [
@@ -212,7 +227,9 @@ export const MAPS: Record<string, MapDef> = {
       { id: 'park_kid', x: 7, y: 13, look: 'kid', dir: 'up', wander: true, talk: "My mom says if I don't stop running around she's gonna sell me to Uncle Dale for scrap." },
       { id: 'park_hick', x: 16, y: 7, look: 'hick', dir: 'left', wander: true, talk: ['Them people out on Rail Yard Road?', "Hang out in the weeds long enough and one'll jump right out at ya.", "Wear 'em down first, THEN bag 'em. That's just manners."] },
       { id: 'park_bum', x: 21, y: 12, look: 'bum', dir: 'down', talk: "I'm not homeless, I'm house-optional." },
+      { id: 'it_p_van', x: 1, y: 14, look: 'item', item: 'VAN' },
     ],
+    hidden: [{ x: 19, y: 9, item: 'SACK', n: 2 }],
     signs: [
       { x: 5, y: 4, text: 'Mailbox: "OCCUPANT". Also a court summons. Also a Little Caesars coupon.' },
       { x: 13, y: 12, text: 'A pink lawn flamingo. Somebody gave it a cigarette.' },
@@ -239,7 +256,7 @@ export const MAPS: Record<string, MapDef> = {
     npcs: [
       {
         id: 'tr_cook', x: 4, y: 1, look: 'dale', dir: 'down',
-        trainer: { cls: 'COOK', name: 'LARRY', team: [['KENNY', 5], ['LARRY', 6]], sight: 3, intro: ['WHOA. Shut the door! Do you have ANY idea how volatile this is?!'], lose: 'Fine. Fine! Just do not touch the blue stuff.', after: "This is a perfectly legal chemistry hobby. I'm making... soap.", reward: 200 },
+        trainer: { cls: 'COOK', name: 'LARRY', team: [['KENNY', 5], ['LARRY', 5]], sight: 3, intro: ['WHOA. Shut the door! Do you have ANY idea how volatile this is?!'], lose: 'Fine. Fine! Just do not touch the blue stuff.', after: "This is a perfectly legal chemistry hobby. I'm making... soap.", reward: 200 },
       },
       { id: 'tut_tweaker', x: 6, y: 4, look: 'bum', dir: 'left', script: 'tutor' },
     ],
@@ -334,19 +351,19 @@ export const MAPS: Record<string, MapDef> = {
       '#########::#########',
       '++++++++++++++++++++',
       '#########::#########',
-      'T....D...::........T',
+      'T..5.D...::........T',
       'T~~~.....::..""""""T',
       'T~~~~....::..""""""T',
       'T~~~~~...::..""""""T',
       'T~~~~~...::..""""""T',
       'T~~~~....::........T',
       'T~~~.....::....%...T',
-      'T.....a..::........T',
+      'T.....a..::.444444.T',
       'T"""""...::...qp...T',
       'T"""""...::........T',
       'T"""""...::...T.T..T',
       'T........::........T',
-      'T..b.....:::::::...T',
+      'T44b4444.:::::::...T',
       'T..b..u....v...:...T',
       'T......"""""...:...T',
       'T..o...""""""..:...T',
@@ -376,6 +393,12 @@ export const MAPS: Record<string, MapDef> = {
       { id: 'it_r1_sack', x: 1, y: 17, look: 'item', item: 'SACK' },
       { id: 'it_r1_burrito', x: 18, y: 1, look: 'item', item: 'BURRITO' },
       { id: 'it_r1_salts', x: 17, y: 25, look: 'item', item: 'SALTS' },
+      { id: 'it_r1_scratch', x: 1, y: 10, look: 'item', item: 'SCRATCHER' },
+    ],
+    hidden: [
+      { x: 3, y: 6, item: 'SACK', n: 3 },
+      { x: 15, y: 16, item: 'ENERGY' },
+      { x: 5, y: 10, item: 'FORTY', n: 2 },
     ],
     signs: [{ x: 6, y: 6, text: 'RAIL YARD ROAD\nNorth: GRIMSBY\nSouth: PINE ACRES TRAILER PARK' }],
     enc: ROUTE1_ENC,
@@ -409,8 +432,8 @@ export const MAPS: Record<string, MapDef> = {
       'T:"""""":"""":_|=_nnnnnDZZZZZ==T',
       'T:"""""":"""":_|=_nnnnn=ZZZZZ==T',
       'T:"""""":"""":_|=_nnnnn=HJHJH==T',
-      'T:""""""v::::x_|=_nnnnn=HJOJH==T',
-      'T.::::::::::::_|=______________T',
+      'T##"""""v::::x_|=_nnnnn=HJOJH==T',
+      'T.5:::::::::::_|=______________T',
       'TTTTTTTTTTTTTT_|=_TTTTTTTTTTTTTT',
       'TTTTTTTTTTTTTT_|=_TTTTTTTTTTTTTT',
       'TTTTTTTTTTTTTT_|=_TTTTTTTTTTTTTT',
@@ -443,9 +466,10 @@ export const MAPS: Record<string, MapDef> = {
       },
       {
         id: 'tr_kyle', x: 27, y: 15, look: 'skater', dir: 'left',
-        trainer: { cls: 'SKATE RAT', name: 'KYLE', team: [['DAVE', 7], ['CARL', 8]], sight: 4, intro: ['Duuude. This lot is OUR spot.'], lose: 'Gnarly. Bogus, but gnarly.', after: "We're not loitering, we're skating. Without boards.", reward: 110 },
+        trainer: { cls: 'SKATE RAT', name: 'KYLE', team: [['DAVE', 6], ['CARL', 6]], sight: 4, intro: ['Duuude. This lot is OUR spot.'], lose: 'Gnarly. Bogus, but gnarly.', after: "We're not loitering, we're skating. Without boards.", reward: 110 },
       },
-      { id: 'it_t_tape', x: 1, y: 22, look: 'item', item: 'TAPE' },
+      { id: 'it_t_tape', x: 5, y: 22, look: 'item', item: 'TAPE' },
+      { id: 'it_t_shiv', x: 1, y: 22, look: 'item', item: 'SHIV' },
       { id: 'it_t_energy', x: 30, y: 21, look: 'item', item: 'ENERGY' },
       { id: 'it_t_seed', x: 12, y: 17, look: 'item', item: 'SEED' },
     ],
@@ -462,6 +486,11 @@ export const MAPS: Record<string, MapDef> = {
       { x: 27, y: 21, text: 'The windows are blacked out and the house is humming. It smells like a skunk got into a Grateful Dead concert.' },
     ],
     triggers: [],
+    hidden: [
+      { x: 23, y: 6, item: 'SEED' },
+      { x: 25, y: 12, item: 'JOINT', n: 2 },
+      { x: 30, y: 16, item: 'LOKO' },
+    ],
     enc: CAMP_ENC,
     enc2: { area: [18, 11, 30, 22], enc: LOT_ENC },
   },
@@ -607,7 +636,7 @@ export const MAPS: Record<string, MapDef> = {
       {
         id: 'tony', x: 5, y: 2, look: 'tony', dir: 'down',
         trainer: {
-          cls: 'BOSS', name: 'BIG TONY', boss: true, team: [['DEZ', 10], ['GLEN', 11], ['TANK', 13]], sight: 0,
+          cls: 'BOSS', name: 'BIG TONY', boss: true, team: [['DEZ', 9], ['GLEN', 9], ['TANK', 11]], sight: 0,
           intro: ['So. You\'re the kid from the trailer park bagging bums all over town.', 'This is MY block. Everybody on it works for me.', "Show me what your crew's got, and maybe I'll let you keep it."],
           lose: "...Hah! Okay, kid. Okay. You got real cred.",
           after: 'Take that CORNER CRED and get outta my house. Tell your Uncle Dale he still owes me forty bucks.',
@@ -644,9 +673,9 @@ export const MAPS: Record<string, MapDef> = {
       'T.:c""""::%.._UUKU1UUUKUUU1UKU#T',
       'T.."""F""::.._UUU11UUUU12UUU1U#T',
       'T.o:"""""::.b_1UUUUU211UUUU3UU#T',
-      'T..::""""::.._UUKU1UUUKU1UUUK1#T',
+      'T#.::""""::.._UUKU1UUUKU1UUUK1#T',
       'T.%:::o:::::._U1UUU21UUUU11UUU#T',
-      'T............_UUU11UUUUUUUUU1x#T',
+      'T.5.........._UUU11UUUUUUUUU1x#T',
       'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
     ],
     warps: [
@@ -677,6 +706,11 @@ export const MAPS: Record<string, MapDef> = {
       { id: 'it_b_flask', x: 12, y: 22, look: 'item', item: 'FLASK' },
       { id: 'it_b_energy', x: 29, y: 13, look: 'item', item: 'ENERGY' },
       { id: 'it_b_van', x: 1, y: 16, look: 'item', item: 'VAN' },
+      { id: 'it_b_casserole', x: 1, y: 22, look: 'item', item: 'CASSEROLE' },
+    ],
+    hidden: [
+      { x: 10, y: 17, item: 'DEFIB' },
+      { x: 29, y: 2, item: 'CASSEROLE' },
     ],
     signs: [
       { x: 31, y: 8, text: 'ROAD CLOSED. BRIDGE OUT.\nA second sign under it says "BRIDGE WAS NEVER IN".' },
@@ -845,4 +879,9 @@ export function getMap(id: string): MapDef {
   const m = MAPS[id];
   if (!m) throw new Error('Unknown map ' + id);
   return m;
+}
+
+/** Your cousin's crew under the overpass: two new guys and his starter, evolved. */
+export function rival2Team(evolvedStarter: SpeciesId): [SpeciesId, number][] {
+  return [['DAVE', 11], ['KENNY', 11], [evolvedStarter, 14]];
 }

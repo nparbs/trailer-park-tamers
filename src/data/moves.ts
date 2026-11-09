@@ -48,6 +48,7 @@ export const MOVES = {
   // HOLY
   SERMON: { name: 'Sermon', type: 'HOLY', power: 0, acc: 90, pp: 25, inflict: { status: 'out', chance: 100 }, text: 'It was a looong sermon.' },
   BIBLE_THUMP: { name: 'Bible Thump', type: 'HOLY', power: 50, acc: 100, pp: 25 },
+  HOLY_WATER: { name: 'Holy Water', type: 'HOLY', power: 65, acc: 100, pp: 15, text: "It's tap water. He blessed it himself." },
   REPENT: { name: 'Repent!', type: 'HOLY', power: 0, acc: 100, pp: 20, stat: { who: 'foe', stat: 'atk', stages: -1 } },
   LAYING_HANDS: { name: 'Laying Hands', type: 'HOLY', power: 0, acc: 0, pp: 10, heal: 0.5 },
   BRIMSTONE: { name: 'Fire & Brimstone', type: 'HOLY', power: 90, acc: 95, pp: 10 },

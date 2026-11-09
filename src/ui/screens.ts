@@ -10,7 +10,8 @@ import { displayName, expForLevel, maxHp, stats, type Drifter } from '../game/cr
 import { Input } from '../game/input';
 import { G } from '../game/state';
 import { net } from '../net/client';
-import { sfx } from '../audio/sound';
+import { isMusicOff, isMuted, sfx, toggleMusic, toggleMute } from '../audio/sound';
+import { saveSettings, settings, type TextSpeed } from '../game/settings';
 import { wrap } from '../gfx/font';
 import { cursor, H, label, panel, TEXT, UI, W } from './ui';
 
@@ -80,42 +81,190 @@ export interface PartyOpts {
   list?: Drifter[];
   /** Where the cursor starts. */
   initial?: number;
+  /** 'list' scrolls one row per drifter (storage); the default is the party layout. */
+  layout?: 'party' | 'list';
 }
 
+const WHITE = 0xf8f8f8;
+const INK = 0x404048;
+const hpText = (d: Drifter) => `${String(Math.max(0, d.hp)).padStart(3)}/${String(maxHp(d)).padStart(3)}`;
+const statusText = (d: Drifter) => (d.hp <= 0 ? 'K.O.' : d.status ? STATUS_NAME[d.status] : '');
+
+/** Fit a name in n characters: the last word if the whole thing is too long. */
+export function shortName(name: string, n: number) {
+  if (name.length <= n) return name;
+  const last = name.split(' ').pop() ?? name;
+  return last.length <= n ? last : name.slice(0, n);
+}
+
+/** Slot colours: [border, fill] for normal, selected, and knocked out. */
+function slotColors(sel: boolean, ko: boolean): [number, number] {
+  if (ko) return sel ? [0xf86858, 0xf89888] : [0x582830, 0x9c5c64];
+  return sel ? [0xf87848, 0xf8a070] : [0x283848, 0x4c7c9c];
+}
+
+/**
+ * Pick a crew member. A party of six or fewer uses the handheld layout: the lead
+ * in a big panel on the left, everyone else stacked on the right, CANCEL below.
+ * Longer lists (the storage unit) scroll.
+ */
 export async function pickFromParty(scene: Phaser.Scene, ui: UI, o: PartyOpts = {}): Promise<number> {
   const list = o.list ?? G.party;
+  if (o.layout === 'list' || list.length > 6) return pickFromList(scene, ui, list, o);
+  const l = new Layer(scene, 0x3c6c8c);
+  const canCancel = o.cancel !== false;
+  type Slot = { x: number; y: number; w: number; h: number; g: Phaser.GameObjects.Graphics; ico?: Phaser.GameObjects.Sprite; icoY: number };
+  const slots: Slot[] = [];
+  const RIGHT_X = 90;
+  const RIGHT_W = 148;
+  const rowY = (k: number) => 4 + (k - 1) * 23;
+  list.forEach((d, k) => {
+    const lead = k === 0;
+    const s: Slot = lead
+      ? { x: 2, y: 18, w: 84, h: 70, g: l.g(), icoY: 18 + 18 }
+      : { x: RIGHT_X, y: rowY(k), w: RIGHT_W, h: 21, g: l.g(), icoY: rowY(k) + 10 };
+    slots.push(s);
+    const name = displayName(d);
+    const st = statusText(d);
+    if (lead) {
+      s.ico = l.add(scene.add.sprite(s.x + 16, s.icoY, 'w_sp:' + d.sp, 0));
+      l.text(s.x + 30, s.y + 8, 'Lv' + d.level, WHITE, INK);
+      if (st) l.text(s.x + 30, s.y + 18, st, 0xf8d8d8, 0x904040);
+      const lines = wrap(name, 9);
+      const two = lines.length <= 2 && lines.every((x) => x.length <= 9) ? lines : [shortName(name, 9)];
+      two.forEach((ln, j) => l.text(s.x + 6, s.y + 32 + j * 9, ln, WHITE, INK));
+      drawHpBar(l.g(), s.x + 6, s.y + 53, 50, d.hp / maxHp(d));
+      l.text(s.x + 14, s.y + 60, hpText(d), WHITE, INK);
+    } else {
+      s.ico = l.add(scene.add.sprite(s.x + 12, s.icoY, 'w_sp:' + d.sp, 0));
+      l.text(s.x + 24, s.y + 2, shortName(name, 10), WHITE, INK);
+      const tag = st || 'Lv' + d.level;
+      l.text(s.x + s.w - 6 - tag.length * 8, s.y + 2, tag, st ? 0xf8d8d8 : WHITE, st ? 0x904040 : INK);
+      drawHpBar(l.g(), s.x + 24, s.y + 12, 40, d.hp / maxHp(d));
+      l.text(s.x + 86, s.y + 11, hpText(d), WHITE, INK);
+    }
+    // Draw the frame under its contents.
+    s.g.setDepth(s.g.depth - 0.5);
+  });
+  // Empty slots on the right.
+  for (let k = Math.max(1, list.length); k < 6; k++) {
+    const g = l.g();
+    g.fillStyle(0x2c5068).fillRoundedRect(RIGHT_X, rowY(k), RIGHT_W, 21, 4);
+    g.fillStyle(0x34607c).fillRoundedRect(RIGHT_X + 1, rowY(k) + 1, RIGHT_W - 2, 19, 3);
+  }
+  const cancelBox = canCancel ? { x: 178, y: 121, w: 60, h: 17, g: l.g() } : null;
+  if (cancelBox) l.text(cancelBox.x + 6, cancelBox.y + 5, 'CANCEL', WHITE, INK);
+  if (cancelBox) cancelBox.g.setDepth(cancelBox.g.depth - 0.5);
+  l.panel(0, H - 18, W, 18);
+  l.text(8, H - 12, o.title ?? 'Choose a crew member.');
+
+  const n = list.length;
+  const total = n + (cancelBox ? 1 : 0);
+  let i = Math.max(0, Math.min(n - 1, o.initial ?? 0));
+  if (!n) i = cancelBox ? 0 : -1;
+  let lastRight = 1;
+  const draw = () => {
+    slots.forEach((s, k) => {
+      const [edge, fill] = slotColors(k === i, list[k].hp <= 0 || !!o.disabled?.(list[k], k));
+      s.g.clear();
+      s.g.fillStyle(edge).fillRoundedRect(s.x, s.y, s.w, s.h, 4);
+      s.g.fillStyle(fill).fillRoundedRect(s.x + 1, s.y + 1, s.w - 2, s.h - 2, 3);
+    });
+    if (cancelBox) {
+      const sel = i === n;
+      cancelBox.g.clear();
+      cancelBox.g.fillStyle(sel ? 0xf87848 : 0x283848).fillRoundedRect(cancelBox.x, cancelBox.y, cancelBox.w, cancelBox.h, 4);
+      cancelBox.g.fillStyle(sel ? 0xf8a070 : 0x4c7c9c).fillRoundedRect(cancelBox.x + 1, cancelBox.y + 1, cancelBox.w - 2, cancelBox.h - 2, 3);
+    }
+  };
+  draw();
+  if (!total) {
+    await ui.loop(() => (Input.pressed('a') || Input.pressed('b') ? true : undefined));
+    l.destroy();
+    return -1;
+  }
+  const v = await ui.loop<number>(() => {
+    // The highlighted drifter bobs, like the handhelds.
+    const t = Math.floor(scene.time.now / 220) % 2;
+    slots.forEach((s, k) => {
+      if (!s.ico) return;
+      const sel = k === i && list[k].hp > 0;
+      s.ico.setFrame(sel ? 1 + t : 0).setY(s.icoY - (sel && t ? 1 : 0));
+    });
+    let next = i;
+    if (Input.repeat('down')) next = (i + 1) % total;
+    else if (Input.repeat('up')) next = (i + total - 1) % total;
+    else if (Input.pressed('left') && i >= 1 && i < n) next = 0;
+    else if (Input.pressed('right') && i === 0 && n > 1) next = Math.min(lastRight, n - 1);
+    if (next !== i) {
+      i = next;
+      if (i >= 1 && i < n) lastRight = i;
+      sfx('move');
+      draw();
+    }
+    if (Input.pressed('a')) {
+      if (i === n) { sfx('back'); return -1; }
+      sfx('select');
+      return i;
+    }
+    if (Input.pressed('b') && canCancel) { sfx('back'); return -1; }
+    return undefined;
+  });
+  l.destroy();
+  return v;
+}
+
+/** A scrolling one-row-per-drifter list, for the storage unit. */
+async function pickFromList(scene: Phaser.Scene, ui: UI, list: Drifter[], o: PartyOpts): Promise<number> {
   const l = new Layer(scene, 0x3c6c8c);
   const rowH = 23;
-  const rows: { g: Phaser.GameObjects.Graphics; y: number }[] = [];
-  list.forEach((d, i) => {
-    const y = 4 + i * rowH;
-    const g = l.g();
-    rows.push({ g, y });
-    const ico = l.add(scene.add.sprite(14, y + 10, 'w_sp:' + d.sp, 0));
-    ico.setOrigin(0.5);
-    // Name gets the whole top line; level, status, HP bar and numbers share the second.
-    l.text(28, y + 3, displayName(d).slice(0, 25), 0xf8f8f8, 0x404048);
-    l.text(28, y + 12, 'Lv' + d.level, 0xf8f8f8, 0x404048);
-    if (d.status) l.text(64, y + 12, STATUS_NAME[d.status], 0xf8d8d8, 0x904040);
-    if (d.hp <= 0) l.text(64, y + 12, 'K.O.', 0xf8d8d8, 0x904040);
-    const bar = l.g();
-    drawHpBar(bar, 100, y + 13, 46, d.hp / maxHp(d));
-    l.text(172, y + 12, `${String(d.hp).padStart(3)}/${String(maxHp(d)).padStart(3)}`, 0xf8f8f8, 0x404048);
-    if (o.disabled?.(d, i)) {
-      const dim = l.g();
-      dim.fillStyle(0x000000, 0.3).fillRect(4, y, 232, rowH - 2);
-    }
-  });
-  const msgP = l.panel(0, H - 18, W, 18);
-  void msgP;
+  const visible = 5;
+  const frames = Array.from({ length: visible }, () => l.g());
+  let rowObjs: Phaser.GameObjects.GameObject[] = [];
+  // Scroll hints sit beside the count, clear of the rows.
+  const up = l.text(W - 96, H - 30, '', WHITE, INK);
+  const down = l.text(W - 86, H - 30, '', WHITE, INK);
+  l.panel(0, H - 18, W, 18);
   l.text(8, H - 12, o.title ?? 'Choose a crew member.');
+  l.text(W - 64, H - 30, list.length ? `${list.length} HERE` : '', WHITE, INK);
   let i = Math.max(0, Math.min(list.length - 1, o.initial ?? 0));
+  let top = -1;
+  const fill = () => {
+    rowObjs.forEach((x) => x.destroy());
+    rowObjs = [];
+    const add = <T extends Phaser.GameObjects.GameObject>(x: T) => {
+      rowObjs.push(l.add(x));
+      return x;
+    };
+    for (let k = 0; k < visible; k++) {
+      const d = list[top + k];
+      if (!d) continue;
+      const y = 4 + k * rowH;
+      add(scene.add.sprite(14, y + 10, 'w_sp:' + d.sp, 0));
+      add(label(scene, 28, y + 3, displayName(d).slice(0, 25), WHITE, INK));
+      add(label(scene, 28, y + 12, 'Lv' + d.level, WHITE, INK));
+      const st = statusText(d);
+      if (st) add(label(scene, 64, y + 12, st, 0xf8d8d8, 0x904040));
+      const bar = add(scene.add.graphics());
+      drawHpBar(bar, 100, y + 13, 46, d.hp / maxHp(d));
+      add(label(scene, 172, y + 12, hpText(d), WHITE, INK));
+    }
+    up.setText(top > 0 ? '^' : '');
+    down.setText(top + visible < list.length ? 'v' : '');
+  };
   const draw = () => {
-    rows.forEach((r, k) => {
-      r.g.clear();
-      const sel = k === i;
-      r.g.fillStyle(sel ? 0xf87848 : 0x283848).fillRoundedRect(4, r.y, 232, rowH - 2, 4);
-      r.g.fillStyle(sel ? 0xf8a070 : 0x4c7c9c).fillRoundedRect(5, r.y + 1, 230, rowH - 4, 3);
+    const t = Math.max(0, Math.min(i - 2, list.length - visible));
+    if (t !== top) {
+      top = t;
+      fill();
+    }
+    frames.forEach((g, k) => {
+      g.clear();
+      const d = list[top + k];
+      if (!d) return;
+      const [edge, f] = slotColors(top + k === i, d.hp <= 0 || !!o.disabled?.(d, top + k));
+      g.fillStyle(edge).fillRoundedRect(4, 4 + k * rowH, 232, rowH - 2, 4);
+      g.fillStyle(f).fillRoundedRect(5, 5 + k * rowH, 230, rowH - 4, 3);
     });
   };
   draw();
@@ -131,6 +280,7 @@ export async function pickFromParty(scene: Phaser.Scene, ui: UI, o: PartyOpts = 
     if (Input.pressed('b') && o.cancel !== false) { sfx('back'); return -1; }
     return undefined;
   });
+  rowObjs.forEach((x) => x.destroy());
   l.destroy();
   return v;
 }
@@ -398,6 +548,71 @@ export async function profile(scene: Phaser.Scene, ui: UI) {
   l.destroy();
 }
 
+// ---------------- options ----------------
+
+export async function options(scene: Phaser.Scene, ui: UI) {
+  const l = new Layer(scene, 0x5c6c8c);
+  const g = l.g();
+  g.fillStyle(0x283048).fillRect(0, 0, W, 14);
+  l.text(18, 3, 'OPTIONS', 0xf8f8f8, 0x283048);
+  l.panel(4, 18, W - 8, 104, 0xf8f8f8);
+  l.panel(4, 124, W - 8, 32, 0xf8f8f8);
+  const help = l.text(12, 135, '');
+  const cur = l.add(cursor(scene));
+  interface Row { name: string; values: string[]; get: () => number; set: (i: number) => void; help: string }
+  const speeds: TextSpeed[] = ['slow', 'mid', 'fast'];
+  const rows: Row[] = [
+    {
+      name: 'TEXT SPEED', values: ['SLOW', 'MID', 'FAST'], help: 'How fast words type out.',
+      get: () => speeds.indexOf(settings.text), set: (i) => (settings.text = speeds[i]),
+    },
+    {
+      name: 'BATTLE FX', values: ['ON', 'OFF'], help: 'Move animations in fights.',
+      get: () => (settings.anims ? 0 : 1), set: (i) => (settings.anims = i === 0),
+    },
+    {
+      name: 'MUSIC', values: ['ON', 'OFF'], help: 'Sound effects stay on. (M)',
+      get: () => (isMusicOff() ? 1 : 0), set: (i) => { if ((i === 1) !== isMusicOff()) toggleMusic(); },
+    },
+    {
+      name: 'SOUND', values: ['ON', 'OFF'], help: 'Everything: music and effects.',
+      get: () => (isMuted() ? 1 : 0), set: (i) => { if ((i === 1) !== isMuted()) toggleMute(); },
+    },
+  ];
+  const valTexts = rows.map((r, k) => {
+    l.text(22, 28 + k * 18, r.name);
+    return r.values.map((v, j) => l.text(116 + j * 40, 28 + k * 18, v));
+  });
+  l.text(22, 28 + rows.length * 18, 'DONE');
+  let i = 0;
+  const render = () => {
+    rows.forEach((r, k) => valTexts[k].forEach((t, j) => t.setTint(j === r.get() ? 0xd04030 : 0xa8a8b0)));
+    cur.setPosition(13, 29 + i * 18);
+    help.setText(i < rows.length ? rows[i].help : 'Back to the game.');
+  };
+  render();
+  await ui.loop(() => {
+    const n = rows.length + 1;
+    if (Input.repeat('down')) { i = (i + 1) % n; sfx('move'); render(); }
+    if (Input.repeat('up')) { i = (i + n - 1) % n; sfx('move'); render(); }
+    const r = rows[i];
+    const left = Input.repeat('left');
+    const right = Input.repeat('right');
+    if (r && (left || right || Input.pressed('a'))) {
+      const step = left ? -1 : 1;
+      const len = r.values.length;
+      r.set((r.get() + step + len) % len);
+      saveSettings();
+      sfx('move');
+      render();
+      return undefined;
+    }
+    if (Input.pressed('b') || (Input.pressed('a') && !r)) { sfx('back'); return true; }
+    return undefined;
+  });
+  l.destroy();
+}
+
 // ---------------- storage ----------------
 
 export async function storage(scene: Phaser.Scene, ui: UI) {
@@ -408,7 +623,7 @@ export async function storage(scene: Phaser.Scene, ui: UI) {
       if (!G.storage.length) { await ui.say('The unit is empty. It smells like old mattresses.'); continue; }
       if (G.party.length >= 6) { await ui.say('Your crew is full!'); continue; }
       ui.close();
-      const k = await pickFromParty(scene, ui, { list: G.storage, title: 'Take who?' });
+      const k = await pickFromParty(scene, ui, { list: G.storage, title: 'Take who?', layout: 'list' });
       if (k >= 0) {
         const [d] = G.storage.splice(k, 1);
         G.party.push(d);

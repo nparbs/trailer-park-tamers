@@ -38,7 +38,7 @@ const SKIN = { pale: 0xf0c8a0, tan: 0xd8a070, brown: 0xa86c40, dark: 0x6c4428, r
 export const SPECIES = {
   WILLIE: {
     name: 'Wino Willie', types: ['BOOZE'], base: { hp: 50, atk: 55, def: 40, spd: 45 }, catchRate: 45, baseExp: 64,
-    learnset: [[1, 'SHOVE'], [1, 'PANHANDLE'], [5, 'BOTTLE_SMASH'], [9, 'BEER_BREATH'], [13, 'LIQUID_COURAGE'], [18, 'PROJECTILE_PUKE'], [26, 'BENDER']],
+    learnset: [[1, 'SHOVE'], [1, 'PANHANDLE'], [6, 'BOTTLE_SMASH'], [9, 'BEER_BREATH'], [13, 'LIQUID_COURAGE'], [15, 'FORTY_SMASH'], [18, 'PROJECTILE_PUKE'], [26, 'BENDER']],
     evolves: { level: 16, into: 'BILL' },
     look: { skin: SKIN.ruddy, hair: 0x9c9890, hairStyle: 'beanie', beard: 'stubble', top: 0x6a5a3a, topStyle: 'coat', pants: 0x404858, prop: 'bottle', nose: 0xd04040 },
     dex: 'Lives in a paper bag, emotionally and physically. Gets braver every swig.',
@@ -51,7 +51,7 @@ export const SPECIES = {
   },
   AMOS: {
     name: 'Brother Amos', types: ['HOLY'], base: { hp: 55, atk: 45, def: 55, spd: 40 }, catchRate: 45, baseExp: 64,
-    learnset: [[1, 'SHOVE'], [1, 'REPENT'], [5, 'BIBLE_THUMP'], [9, 'SERMON'], [13, 'LAYING_HANDS'], [20, 'BRIMSTONE']],
+    learnset: [[1, 'SHOVE'], [1, 'REPENT'], [6, 'BIBLE_THUMP'], [9, 'SERMON'], [13, 'LAYING_HANDS'], [14, 'HOLY_WATER'], [20, 'BRIMSTONE']],
     evolves: { level: 16, into: 'PROPHET' },
     look: { skin: SKIN.dark, hair: 0x302820, hairStyle: 'short', beard: 'full', top: 0x302830, topStyle: 'sweater', pants: 0x282830, prop: 'bible' },
     dex: 'Preaches on the same corner every day. Nobody listens, but he keeps the hours of a bank.',
@@ -64,7 +64,7 @@ export const SPECIES = {
   },
   PETE: {
     name: 'Twitchy Pete', types: ['CHEM'], base: { hp: 45, atk: 50, def: 35, spd: 70 }, catchRate: 45, baseExp: 64,
-    learnset: [[1, 'SHOVE'], [1, 'SPIT'], [5, 'TWITCH'], [9, 'FUMES'], [13, 'TWEAK_OUT'], [19, 'BAD_TRIP'], [27, 'CHEM_BURN']],
+    learnset: [[1, 'SHOVE'], [1, 'SPIT'], [6, 'TWITCH'], [9, 'FUMES'], [13, 'TWEAK_OUT'], [15, 'BAD_TRIP'], [27, 'CHEM_BURN']],
     evolves: { level: 16, into: 'SPUN' },
     look: { skin: SKIN.pale, hair: 0x806040, hairStyle: 'hood', beard: 'none', top: 0x50607c, topStyle: 'hoodie', pants: 0x384048, thin: true },
     dex: 'Has been awake since Tuesday. Which Tuesday is unclear.',

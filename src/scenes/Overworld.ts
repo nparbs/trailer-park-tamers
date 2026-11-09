@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { getMap, type MapDef, type NpcDef, type TrainerDef } from '../data/maps';
-import { item } from '../data/items';
+import { encountersFor, getMap, type MapDef, type NpcDef, type TrainerDef } from '../data/maps';
+import { item, type ItemId } from '../data/items';
+import { dayNumber, isNight, phase, PHASE_TINT, type Phase } from '../game/time';
 import { type SpeciesId } from '../data/species';
 import { displayName, makeDrifter, type Drifter } from '../game/creature';
 import { Input } from '../game/input';
@@ -12,7 +13,7 @@ import { isChatOpen } from '../ui/chat';
 import { INDOOR, OUTDOOR, tileIndex, type TileDef } from '../gfx/tiles';
 import { music, sfx } from '../audio/sound';
 import { UI, label, panel } from '../ui/ui';
-import { pickFromParty, pickItem, profile, showSummary, streetDex } from '../ui/screens';
+import { options, pickFromParty, pickItem, profile, showSummary, streetDex } from '../ui/screens';
 import { SCRIPTS } from './scripts';
 import type { BattleResult } from '../game/battle';
 import type { BattleData } from './Battle';
@@ -54,6 +55,13 @@ export class Overworld extends Phaser.Scene {
   private quitToTitle = false;
   skating = false;
   private board?: Phaser.GameObjects.Graphics;
+  /** The map's rows with any fences already cut open. */
+  private rows: string[] = [];
+  private layer?: Phaser.Tilemaps.TilemapLayer;
+  private tileIdx = new Map<string, number>();
+  private shownPhase: Phase | null = null;
+  private nextPhaseCheck = 0;
+  private nightObjs: Phaser.GameObjects.GameObject[] = [];
 
   constructor() {
     super('Overworld');
@@ -85,10 +93,13 @@ export class Overworld extends Phaser.Scene {
     G.facing = facing;
 
     const idx = tileIndex(this.legend);
-    const data = this.map.rows.map((r) => [...r].map((ch) => idx.get(ch) ?? 0));
+    this.tileIdx = idx;
+    // Fences you've cut stay cut.
+    this.rows = this.map.rows.map((r, y) => [...r].map((ch, x) => (ch === CUTTABLE && G.flags[cutFlag(id, x, y)] ? CUT : ch)).join(''));
+    const data = this.rows.map((r) => [...r].map((ch) => idx.get(ch) ?? 0));
     const tm = this.make.tilemap({ data, tileWidth: TS, tileHeight: TS });
     const ts = tm.addTilesetImage(this.map.indoor ? 'tiles-in' : 'tiles-out', this.map.indoor ? 'tiles-in' : 'tiles-out', TS, TS, 0, 0)!;
-    tm.createLayer(0, ts, 0, 0)!.setDepth(0);
+    this.layer = tm.createLayer(0, ts, 0, 0)!.setDepth(0);
 
     const mw = this.map.rows[0].length * TS;
     const mh = this.map.rows.length * TS;
@@ -120,6 +131,37 @@ export class Overworld extends Phaser.Scene {
     if (this.map.indoor) this.skating = false;
     this.board = undefined;
     this.drawBoard();
+    this.shownPhase = null;
+    this.nightObjs = [];
+    this.applyTimeOfDay();
+  }
+
+  // ---------- time of day ----------
+
+  /** Tint outdoor maps for morning, evening and night, and light the lamps after dark. */
+  private applyTimeOfDay() {
+    const p: Phase = this.map.indoor ? 'day' : phase();
+    if (p === this.shownPhase) return;
+    this.shownPhase = p;
+    this.nightObjs.forEach((o) => o.destroy());
+    this.nightObjs = [];
+    if (p === 'day') return;
+    const shade = this.add.rectangle(0, 0, 240, 160, PHASE_TINT[p]).setOrigin(0, 0).setScrollFactor(0).setDepth(900);
+    shade.setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.nightObjs.push(shade);
+    if (p !== 'night' && p !== 'evening') return;
+    // Lampposts, fire barrels and lit windows glow through the dark: [x, y, strength].
+    const lights: Record<string, [number, number, number]> = { l: [8, 2, 1], F: [8, 3, 1], '3': [8, 3, 1], W: [8, 7, 0.5], N: [8, 7, 0.5], Y: [8, 7, 0.35] };
+    this.rows.forEach((r, y) =>
+      [...r].forEach((ch, x) => {
+        const L = lights[ch];
+        if (!L) return;
+        const big = ch === 'l' || ch === 'F' || ch === '3';
+        const g = this.add.image(x * TS + L[0], y * TS + L[1], 'glow').setDepth(901).setBlendMode(Phaser.BlendModes.ADD);
+        g.setAlpha((p === 'night' ? 1 : 0.5) * L[2]).setScale(big ? 1 : 0.6);
+        this.nightObjs.push(g);
+      }),
+    );
   }
 
   private showMapName() {
@@ -158,7 +200,7 @@ export class Overworld extends Phaser.Scene {
   // ---------- queries ----------
 
   tile(x: number, y: number): TileDef | undefined {
-    const ch = this.map.rows[y]?.[x];
+    const ch = this.rows[y]?.[x];
     if (ch === undefined) return undefined;
     return this.legend.find((t) => t.ch === ch);
   }
@@ -169,7 +211,7 @@ export class Overworld extends Phaser.Scene {
 
   blocked(x: number, y: number, self?: Walker) {
     const t = this.tile(x, y);
-    if (!t || t.solid) return true;
+    if (!t || t.solid || t.ledge) return true;
     if (this.npcs.some((n) => n !== self && n.x === x && n.y === y)) return true;
     if (self !== this.player && this.player.x === x && this.player.y === y) return true;
     return false;
@@ -209,12 +251,34 @@ export class Overworld extends Phaser.Scene {
           w.spr.setFrame(FRAME0[dir]).setFlipX(dir === 'right');
           this.sortWalker(w);
           this.updateWeeds(w);
+          if (this.tile(w.x, w.y)?.enc) this.rustle(w);
           resolve();
         },
       });
       // Mid-step frame change for a smoother walk.
       this.time.delayedCall(ms * 0.55, () => {
         if (w.moving) w.spr.setFrame(FRAME0[dir]).setFlipX(dir === 'right');
+      });
+    });
+  }
+
+  /** Bits of cardboard and cans kicked up when someone walks through a camp. */
+  rustle(w: Walker) {
+    if (w === this.player) sfx('rustle');
+    const x = w.x * TS + 8;
+    const y = w.y * TS + 13;
+    [0xc09868, 0xe8e0c8, 0xd04040, 0x5c8c3c].forEach((c, i) => {
+      const side = i % 2 ? 1 : -1;
+      const bit = this.add.rectangle(x + side * (2 + i), y, 2, 2, c).setDepth(w.spr.depth + 0.0002);
+      this.tweens.add({
+        targets: bit,
+        x: bit.x + side * (3 + Math.random() * 4),
+        y: y - 4 - Math.random() * 4,
+        duration: 140,
+        ease: 'Quad.out',
+        yoyo: true,
+        hold: 20,
+        onComplete: () => bit.destroy(),
       });
     });
   }
@@ -248,6 +312,10 @@ export class Overworld extends Phaser.Scene {
     }
     if (this.busy || this.player.moving || this.pendingWarp) return;
     if (this.online.pump()) return;
+    if (this.time.now > this.nextPhaseCheck) {
+      this.nextPhaseCheck = this.time.now + 20000;
+      this.applyTimeOfDay();
+    }
 
     if (Input.pressed('start') || Input.escPressed()) {
       void this.run(() => this.startMenu()).then(() => {
@@ -311,6 +379,10 @@ export class Overworld extends Phaser.Scene {
     const nx = p.x + dx;
     const ny = p.y + dy;
     const here = this.warpAt(p.x, p.y);
+    if (dir === 'down' && this.tile(nx, ny)?.ledge && !this.blocked(nx, ny + 1, p)) {
+      void this.hop();
+      return;
+    }
     if (this.blocked(nx, ny, p)) {
       // Doormats and map edges: walking "out" of a warp tile uses it.
       if (here && !this.tile(nx, ny)) {
@@ -329,6 +401,40 @@ export class Overworld extends Phaser.Scene {
     const run = Input.held('b');
     const ms = this.skating ? SKATE_MS : run ? RUN_MS : WALK_MS;
     void this.stepWalker(p, dir, ms).then(() => this.afterStep(dir));
+  }
+
+  /** Jump down a ledge: over the ledge tile, landing on the one below it. */
+  private async hop() {
+    const p = this.player;
+    G.facing = 'down';
+    this.setFacing(p, 'down');
+    this.online.sendMove(p.x, p.y + 2, 'down');
+    sfx('hop');
+    p.moving = true;
+    p.y += 2;
+    const sh = this.add.image(p.x * TS + 1, p.y * TS + 11, 'shadow').setOrigin(0, 0).setAlpha(0.3).setDepth(p.spr.depth - 0.001);
+    const y0 = p.spr.y;
+    const y1 = p.y * TS - 3;
+    p.spr.setFrame(FRAME0.down + 1);
+    await new Promise<void>((resolve) =>
+      this.tweens.addCounter({
+        from: 0,
+        to: 1,
+        duration: 380,
+        onUpdate: (tw) => {
+          const t = tw.getValue() ?? 1;
+          p.spr.setY(y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * 9);
+          this.sortWalker(p);
+        },
+        onComplete: () => resolve(),
+      }),
+    );
+    sh.destroy();
+    p.moving = false;
+    p.spr.setY(y1).setFrame(FRAME0.down);
+    this.sortWalker(p);
+    if (this.tile(p.x, p.y)?.enc) this.rustle(p);
+    await this.afterStep('down');
   }
 
   private async afterStep(dir: Dir) {
@@ -422,7 +528,70 @@ export class Overworld extends Phaser.Scene {
     if (sign) {
       if (sign.script) await SCRIPTS[sign.script](this);
       else await this.ui.say(sign.text);
+      return;
     }
+    const fx = p.x + dx;
+    const fy = p.y + dy;
+    const ch = this.rows[fy]?.[fx];
+    if (this.map.indoor || !ch) return;
+    if (ch === CUTTABLE) await this.cutFence(fx, fy);
+    else if (TRASH.includes(ch)) await this.searchTrash(fx, fy, ch);
+  }
+
+  // ---------- fences and trash ----------
+
+  private async cutFence(x: number, y: number) {
+    if (!G.bag.BOLT) {
+      await this.ui.say('This bit of fence is held together with zip ties and hope. Something sharp would go right through it.');
+      return;
+    }
+    const yes = await this.ui.ask('The fence is only zip-tied here. Cut through it with the BOLT CUTTERS?');
+    if (yes !== 0) return;
+    this.ui.close();
+    sfx('snip');
+    G.flags[cutFlag(this.map.id, x, y)] = true;
+    this.rows[y] = this.rows[y].slice(0, x) + CUT + this.rows[y].slice(x + 1);
+    this.layer?.putTileAt(this.tileIdx.get(CUT) ?? 0, x, y);
+    await this.ui.wait(250);
+    await this.ui.say(`${G.name} snipped the ties and peeled the fence back!`);
+  }
+
+  /**
+   * Trash piles, dumpsters and bins. Some hide an item for good; any of them can
+   * turn up a bit of junk once a day.
+   */
+  private async searchTrash(x: number, y: number, ch: string) {
+    const what = ch === 'D' ? 'the dumpster' : ch === 't' ? 'the trash can' : 'the trash pile';
+    const hid = this.map.hidden?.find((h) => h.x === x && h.y === y);
+    const key = `${this.map.id}_${x}_${y}`;
+    if (hid && !G.flags['hid_' + key]) {
+      G.flags['hid_' + key] = true;
+      sfx('dig');
+      await this.ui.wait(350);
+      const n = hid.n ?? 1;
+      addItem(hid.item, n);
+      sfx('levelup');
+      const name = item(hid.item).name.toUpperCase();
+      await this.ui.say(`${G.name} dug through ${what}... and found ${n > 1 ? `${n} ${name}S` : `a ${name}`}!`);
+      return;
+    }
+    G.scav ??= {};
+    const today = dayNumber();
+    if (G.scav[key] === today) {
+      await this.ui.say(pick(TRASH_EMPTY).replace('$', what));
+      return;
+    }
+    G.scav[key] = today;
+    sfx('dig');
+    await this.ui.wait(350);
+    if (Math.random() < 0.3) {
+      const it = pickWeighted(JUNK);
+      addItem(it);
+      sfx('select');
+      await this.ui.say(`${G.name} dug through ${what}... and fished out a ${item(it).name.toUpperCase()}. Still sealed. Mostly.`);
+      return;
+    }
+    await this.ui.say(pick(TRASH_NOTHING).replace('$', what));
   }
 
   private async talkTo(n: Walker) {
@@ -510,10 +679,13 @@ export class Overworld extends Phaser.Scene {
     }
     if (!enc || !G.party.some((d) => d.hp > 0)) return;
     if (Math.random() >= enc.rate) return;
-    const total = enc.table.reduce((a, r) => a + r[3], 0);
+    // Some drifters only come out after dark, and some go home at night.
+    const table = encountersFor(enc, isNight());
+    if (!table.length) return;
+    const total = table.reduce((a, r) => a + r[3], 0);
     let roll = Math.random() * total;
-    let pick = enc.table[0];
-    for (const r of enc.table) {
+    let pick = table[0];
+    for (const r of table) {
       roll -= r[3];
       if (roll <= 0) {
         pick = r;
@@ -578,7 +750,7 @@ export class Overworld extends Phaser.Scene {
     const opts: string[] = [];
     if (G.flags.dex) opts.push('STREETDEX');
     if (G.party.length) opts.push('CREW');
-    opts.push('BAG', G.name, 'SAVE', 'EXIT');
+    opts.push('BAG', G.name, 'SAVE', 'OPTIONS', 'EXIT');
     let last = 0;
     for (;;) {
       const i = await this.ui.choose(opts, { y: 2, cancel: true, initial: last });
@@ -600,6 +772,7 @@ export class Overworld extends Phaser.Scene {
       else if (o === 'CREW') await this.crewMenu();
       else if (o === 'BAG') await this.bagMenu();
       else if (o === G.name) await profile(this, this.ui);
+      else if (o === 'OPTIONS') await options(this, this.ui);
       else if (o === 'SAVE') {
         const yes = await this.ui.ask('Save your progress?');
         if (yes === 0) {
@@ -676,6 +849,35 @@ export class Overworld extends Phaser.Scene {
     d.caughtWith = 'DALE';
     return d;
   }
+}
+
+/** A fence with a zip-tied weak spot, and what it looks like once it's cut. */
+const CUTTABLE = '5';
+const CUT = '6';
+const cutFlag = (map: string, x: number, y: number) => `cut_${map}_${x}_${y}`;
+
+/** Outdoor tiles you can dig through: trash piles, dumpsters and sidewalk bins. */
+const TRASH = '%Dt';
+const JUNK: [ItemId, number][] = [['BURRITO', 35], ['FORTY', 25], ['SALTS', 20], ['SEED', 10], ['ENERGY', 10]];
+const TRASH_NOTHING = [
+  'Nothing in $ but wet cardboard and a single flip-flop.',
+  "Something in $ hissed at you. You've decided you don't need anything in there.",
+  '$ is full of lottery tickets. All losers. You checked.',
+  'Just coffee grounds and regret in $.',
+];
+const TRASH_EMPTY = [
+  "You already went through $ today. It hasn't gotten any better.",
+  'Somebody else picked $ clean since this morning. Probably you.',
+];
+
+function pick<T>(a: T[]): T {
+  return a[Math.floor(Math.random() * a.length)];
+}
+
+function pickWeighted<T>(rows: [T, number][]): T {
+  let r = Math.random() * rows.reduce((a, x) => a + x[1], 0);
+  for (const [v, w] of rows) if ((r -= w) <= 0) return v;
+  return rows[0][0];
 }
 
 function opposite(d: Dir): Dir {
